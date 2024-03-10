@@ -16,7 +16,7 @@ For now, there is a speedcontrol slider in the UI. 1 -> fastest, 10 -> slowest.
 When the research is unlocked, the new building is available in the "Buildings" toolbar.
 
 
-!MineDump.PNG
+!(MineDump.PNG)
 
 
 
