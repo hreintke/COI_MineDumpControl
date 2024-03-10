@@ -37,7 +37,7 @@ namespace MiningDumpingMod
             IEntityMaintenanceProvidersFactory maintenanceProvidersFactory) : base(id, proto, transform, context)
         {
             _proto = proto;
-            minableArea = new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10), new RelTile2i(10, 10));
+            minableArea = new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10).AddX(-5), new RelTile2i(10, 10));
             _designationManager = designationManager;
 
             _designationManager.DesignationAdded.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationAdded));
