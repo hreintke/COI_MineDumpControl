@@ -1,0 +1,13 @@
+ManifestFileVersion: 0
+CRC: 3281352865
+AssetBundleManifest:
+  AssetBundleInfos:
+    Info_0:
+      Name: mdcontrolbuilding1_87ba
+      Dependencies: {}
+    Info_1:
+      Name: mdcontrolbuilding2_fa61
+      Dependencies: {}
+    Info_2:
+      Name: prefabs_3e09
+      Dependencies: {}
