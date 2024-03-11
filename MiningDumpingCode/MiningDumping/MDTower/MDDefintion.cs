@@ -550,6 +550,7 @@ namespace MiningDumpingMod
             LystStruct<TerrainDesignation>.Serialize(this.mineDesignations, writer);
             LystStruct<TerrainDesignation>.Serialize(this.dumpDesignations, writer);
             MDManager.Serialize(this._mdManager, writer);
+            writer.WriteGeneric<IEntityMaintenanceProvider>(_maintenance);
         }
 
         public static MDTower Deserialize(BlobReader reader)
@@ -608,6 +609,7 @@ namespace MiningDumpingMod
             mineDesignations = LystStruct<TerrainDesignation>.Deserialize(reader);
             dumpDesignations = LystStruct<TerrainDesignation>.Deserialize(reader);
             reader.SetField<MDTower>(this, "_mdManager", (object)MDManager.Deserialize(reader));
+            _maintenance = reader.ReadGenericAs<IEntityMaintenanceProvider>();
         }
 
         static MDTower()
