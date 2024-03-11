@@ -72,21 +72,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions.cs" />
-    <Compile Include="Logging.cs" />
+    <Compile Include="Extensions\Extensions.cs" />
+    <Compile Include="Logging\Logging.cs" />
     <Compile Include="MDActions.cs" />
-    <Compile Include="MDDefintion.cs" />
-    <Compile Include="MDHarmony.cs" />
-    <Compile Include="MDInspector.cs" />
-    <Compile Include="MDInspectorAbstract.cs" />
-    <Compile Include="MDManager.cs" />
-    <Compile Include="MDPrototype.cs" />
-    <Compile Include="MDRegistrator.cs" />
-    <Compile Include="MDResearch.cs" />
-    <Compile Include="MDView.cs" />
+    <Compile Include="MDTower\MDDefintion.cs" />
+    <Compile Include="MDTower\MDHarmony.cs" />
+    <Compile Include="MDTower\MDInspector.cs" />
+    <Compile Include="MDTower\MDInspectorAbstract.cs" />
+    <Compile Include="MDTower\MDManager.cs" />
+    <Compile Include="MDTower\MDPrototype.cs" />
+    <Compile Include="MDTower\MDRegistrator.cs" />
+    <Compile Include="MDTower\MDResearch.cs" />
+    <Compile Include="MDTower\MDView.cs" />
     <Compile Include="MiningDumpingMod.cs" />
-    <Compile Include="PartialProductsBuffer.cs" />
-    <Compile Include="ProductTracker.cs" />
+    <Compile Include="ProductBuffers\PartialProductsBuffer.cs" />
+    <Compile Include="ProductBuffers\ProductTracker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
