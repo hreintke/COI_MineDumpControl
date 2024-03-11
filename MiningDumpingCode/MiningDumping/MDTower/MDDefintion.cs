@@ -595,9 +595,9 @@ namespace MiningDumpingMod
             int sVersion = reader.ReadInt();
             reader.SetField(this, "_proto", reader.ReadGenericAs<MDPrototype>());
             reader.SetField(this, "mineIndex", reader.ReadInt());
-            reader.SetField(this, "isMining", reader.ReadBool());
-            reader.SetField(this, "isDumping", reader.ReadBool());
-            reader.SetField(this, "simStepCount", reader.ReadInt());
+            reader.SetProperty(this, "isMining", reader.ReadBool());
+            reader.SetProperty(this, "isDumping", reader.ReadBool());
+            reader.SetProperty(this, "simStepCount", reader.ReadInt());
             minableArea = RectangleTerrainArea2i.Deserialize(reader);
             minedProducts = PartialProductsBuffer.Deserialize(reader);
             sendInProgress = ProductQuantity.Deserialize(reader);
