@@ -17,8 +17,10 @@ namespace MiningDumpingMod
         public string Name => "MiningDumpingMod";
 
         public int Version => 1;
-        public static Version ModVersion = new Version(0, 0, 3);
+        public static Version ModVersion = new Version(2, 0, 0);
         public bool IsUiOnly => false;
+
+        public Option<IConfig> ModConfig { get; }
 
         public void ChangeConfigs(Lyst<IConfig> configs)
         {
@@ -40,6 +42,10 @@ namespace MiningDumpingMod
             registrator.RegisterAllProducts();
             registrator.RegisterData<MDRegistrator>();
             registrator.RegisterData<MDResearch>();
+        }
+
+        public void EarlyInit(DependencyResolver resolver)
+        {
         }
     }
 }
