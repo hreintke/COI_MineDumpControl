@@ -30,7 +30,11 @@ Due to the limited Mod options (yet) in the game, once the mod is used in a game
 # Usage
 
 1 /2 Make mine/dump designations the standard way. 
+
 1/2 Place a MineDumping Building, and set the area around it.
+
 3/ Connect in/out transport belts on wht you need.
+
 4/ Switch on the mining or dumping in the UI.
+
 5/ The mining/dumping starts using the designations the area, taking or loading the goods on the belts
