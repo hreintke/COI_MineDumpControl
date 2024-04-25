@@ -48,7 +48,7 @@ Resulting areas are now flat
 Speedcontrol removed, always highspeed 
 Increased number if input and output ports to two each
 
-#Future
+# Future
 
 I want to include "Level designations (N key)".
 For that to work I need to restructure the inner working of the mod.
