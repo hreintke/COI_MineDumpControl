@@ -17,7 +17,7 @@ namespace MiningDumpingMod
         public string Name => "MiningDumpingMod";
 
         public int Version => 1;
-        public static Version ModVersion = new Version(2, 0, 0);
+        public static Version ModVersion = new Version(3, 0, 0);
         public bool IsUiOnly => false;
 
         public Option<IConfig> ModConfig { get; }

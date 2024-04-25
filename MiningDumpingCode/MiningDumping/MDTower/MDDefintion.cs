@@ -23,6 +23,7 @@ using Mafi.Unity.Mine;
 using System.Reflection;
 using Mafi.Unity.Utils;
 using Mafi.Core.Maintenance;
+using Mafi.Core.Vehicles.Jobs;
 
 namespace MiningDumpingMod
 {
@@ -30,7 +31,6 @@ namespace MiningDumpingMod
     [GenerateSerializer(false, null, 0)]
     public class MDTower : LayoutEntity, IEntityWithWorkers, IEntityWithSimUpdate, IEntityWithPorts, IAreaManagingTower, IMaintainedEntity
     {
-
         public MDTower(EntityId id, MDPrototype proto, TileTransform transform, EntityContext context,
             TerrainDesignationsManager designationManager,
             MDManager mdManager,
@@ -83,6 +83,7 @@ namespace MiningDumpingMod
         public IEntityMaintenanceProvider _maintenance { get; private set; }
 
         public RectangleTerrainArea2i Area { get { return minableArea; } }
+        public int maxAreaSize = 150;
 
         private PartialProductsBuffer minedProducts = new PartialProductsBuffer(new PartialQuantity(100));
         private PartialProductsBuffer tobeDumpedProducts = new PartialProductsBuffer(new PartialQuantity(100));
@@ -124,10 +125,7 @@ namespace MiningDumpingMod
         {
             if ((CurrentState == State.Working) && !minedProducts.IsFull)
             {
-                if (simStepCounter % simStepCount == 0)
-                {
-                    mineCurrentTile();
-                }
+                mineCurrentTile();
             }
             void localSendProduct(ref ProductQuantity sendProduct, IoPortData portData)
             {
@@ -155,22 +153,28 @@ namespace MiningDumpingMod
             {
                 if (ConnectedOutputPorts.Length > 0)
                 {
-                    IoPortData ioPortData = ConnectedOutputPorts[0];
-                    if (sendInProgress != ProductQuantity.None)
+                    for (int cp = 0;cp < ConnectedOutputPorts.Length;cp++)
                     {
-                        localSendProduct(ref sendInProgress, ioPortData);
-                    }
-
-                    if ((sendInProgress == ProductQuantity.None)) // to prevent the enumerator construction at each simupdate when we know we don't need products.
-                    {
-                        LystStruct<LooseProductQuantity>.Enumerator enumerator = minedProducts.FinalProductsReadonly().GetEnumerator();
-                        while ((sendInProgress == ProductQuantity.None) && enumerator.MoveNext())
+                        IoPortData ioPortData = ConnectedOutputPorts[cp];
+                        if (sendInProgress != ProductQuantity.None)
                         {
-                            LooseProductQuantity lq = enumerator.Current;
-                            sendInProgress = new ProductQuantity(lq.Product, lq.Quantity);
                             localSendProduct(ref sendInProgress, ioPortData);
                         }
+
+                        if ((sendInProgress == ProductQuantity.None)) // to prevent the enumerator construction at each simupdate when we know we don't need products.
+                        {
+                            LystStruct<LooseProductQuantity>.Enumerator enumerator = minedProducts.FinalProductsReadonly().GetEnumerator();
+                            while ((sendInProgress == ProductQuantity.None) && enumerator.MoveNext())
+                            {
+                                LooseProductQuantity lq = enumerator.Current;
+                                sendInProgress = new ProductQuantity(lq.Product, lq.Quantity);
+                                localSendProduct(ref sendInProgress, ioPortData);
+                            }
+                        }
+
                     }
+                    
+
                 }
             }
         }
@@ -181,15 +185,15 @@ namespace MiningDumpingMod
         {
             if (currentDesignationIndex == -1)
             {
-                HeightTilesF minHeight = HeightTilesF.MaxValue;
+                HeightTilesF maxHeight = HeightTilesF.MinValue;
                 for (int i = 0;i < dumpDesignations.Count; i++)
                 {
                     if (!dumpDesignations[i].IsDumpingFulfilled)
                     {
                         HeightTilesF thisHeight = (Context.TerrainManager.GetHeight(dumpDesignations[i].CenterTileCoord));
-                        if (thisHeight < minHeight)
+                        if (thisHeight > maxHeight)
                         {
-                            minHeight = thisHeight;
+                            maxHeight = thisHeight;
                             currentDesignationIndex = i;
                         }
                     }
@@ -220,7 +224,7 @@ namespace MiningDumpingMod
                     
                     return (dumpDesignations[currentDesignationIndex].OriginTileCoord + new RelTile2i().Rel4Index(currentDesignationTileIndex));
                 }
-
+                
             }
             
         }
@@ -249,25 +253,27 @@ namespace MiningDumpingMod
             {
                 return;
             }
-
-
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
-
             ThicknessTilesF thickness = pq.Product.DumpableProduct.Value.TerrainMaterial.Value.QuantityToThickness(pq.Quantity);
+#if false
             Context.TerrainManager.DumpMaterial(txia,
                 new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, thickness));
             Context.ProductsManager.ClearProduct(pq);
             totalDumped += pq.Quantity.Value;
+#endif      
+            HeightTilesF requestedHeight = dumpDesignations[currentDesignationIndex].GetTargetHeightAt(txi);
+            ThicknessTilesF notUsedThickness = Context.TerrainManager.DumpMaterialUpToHeight(txia,
+                new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, thickness), requestedHeight);
+            PartialProductQuantity notUsedPartialQuantity = (new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, notUsedThickness)).ToPartialProductQuantity(Context.TerrainManager);
+            tobeDumpedProducts.AddProduct(notUsedPartialQuantity);
         }
 
         private void tryDumping()
         {
             if ((CurrentState == State.Working) || (CurrentState == State.BufferIssue))
             {
-                if (simStepCounter % simStepCount == 0)
-                {
-                    dumpCurrentTile();
-                }
+                dumpCurrentTile();
+                dumpCurrentTile();
             }
         }
 
@@ -395,8 +401,9 @@ namespace MiningDumpingMod
 
         Tile2i getNextMineTile()
         {
-             if (mineDesignationIndex == -1)
+            if (mineDesignationIndex == -1)
             {
+     
                 if (mineDesignations.Count == 0)
                 {
                     return new Tile2i();
@@ -404,11 +411,12 @@ namespace MiningDumpingMod
             
                 for (int i = 0; i < mineDesignations.Count; i++)
                 {
-                   mineDesignationIndex = (mineDesignationIndex + 1) % mineDesignations.Count;
+                    mineDesignationIndex = (mineDesignationIndex + 1) % mineDesignations.Count;
                     if (!mineDesignations[mineDesignationIndex].IsMiningFulfilled)
                     {
                         return getNextMineTile();
                     }
+                    
                 }
                 mineDesignationIndex = -1;
                 return new Tile2i();
@@ -426,7 +434,8 @@ namespace MiningDumpingMod
                     {
                         mineDesignationTileIndex.NextModulo(25);
                     }
-                    while (mineDesignations[mineDesignationIndex].IsMiningFulfilledAt(new RelTile2i().Rel4Index(mineDesignationTileIndex)));
+                    while (mineDesignations[mineDesignationIndex].IsMiningFulfilledAt(mineDesignations[mineDesignationIndex].OriginTileCoord + new RelTile2i().Rel4Index(mineDesignationTileIndex)));
+                    
                     return (mineDesignations[mineDesignationIndex].OriginTileCoord + new RelTile2i().Rel4Index(mineDesignationTileIndex));
                 }
             }
@@ -447,9 +456,12 @@ namespace MiningDumpingMod
 
     public void mineTile(Tile2i txi)
         {
+            HeightTilesF requestedHeight = mineDesignations[mineDesignationIndex].GetTargetHeightAt(txi);
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
-            tts = Context.TerrainManager.MineMaterial(txi.ExtendIndex(Context.TerrainManager), ThicknessTilesF.One);
-            Context.TerrainManager.DisruptExactly(txia , ThicknessTilesF.One);
+            HeightTilesF currentHeight = Context.TerrainManager.GetHeight(txi);
+            
+            tts = Context.TerrainManager.MineMaterial(txi.ExtendIndex(Context.TerrainManager), currentHeight - requestedHeight);
+            Context.TerrainManager.DisruptExactly(txia , currentHeight - requestedHeight);
             totalMined += tts.ToPartialProductQuantity(Context.TerrainManager).Quantity.Value;
             minedProducts.AddProduct(tts.ToPartialProductQuantity(Context.TerrainManager));
         }
@@ -508,6 +520,7 @@ namespace MiningDumpingMod
                 return pq.Quantity;
             }
             tobeDumpedProducts.AddProduct(pq);
+            Context.ProductsManager.ClearProduct(pq);
             return Quantity.Zero;
         }
 
@@ -614,6 +627,7 @@ namespace MiningDumpingMod
             _maintenance = reader.ReadGenericAs<IEntityMaintenanceProvider>();
             reader.SetField(this, "mineDesignationIndex", reader.ReadInt());
             reader.SetField(this, "currentDesignationIndex", reader.ReadInt());
+            maxAreaSize = _proto.maxAreaSize;
         }
 
         static MDTower()

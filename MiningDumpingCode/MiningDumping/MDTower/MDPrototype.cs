@@ -27,6 +27,9 @@ namespace MiningDumpingMod
         }
 
         public override Type EntityType => typeof(MDTower);
+
+        public int maxAreaSize { get; set; }
+        public int maxDistanceFromBuilding { get; set; }
        
     }
 }

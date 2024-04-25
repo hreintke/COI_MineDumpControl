@@ -26,7 +26,7 @@ namespace MiningDumpingMod
         {
             // This unlocks the custom entity at startup
             // Next verions will show the use of research
-//            unlockedProtosDb.Unlock(ImmutableArray.Create(protosDb.Get(PrototypeIDs.LocalEntities.MDTowerID).Value));
+ //           unlockedProtosDb.Unlock(ImmutableArray.Create((IProto)protosDb.Get(PrototypeIDs.LocalEntities.MDTowerID).Value));
         }
     }
 }

@@ -103,7 +103,7 @@ namespace MiningDumpingMod
             dumpBufferBar = new QuantityBar(Builder);
             dumpBufferBar.SetHeight(30);
             dumpBufferBar.AppendTo(ItemsContainer, null, new Offset(20, 0, 20, 0));
-
+#if false
             AddSectionTitle(itemContainer, "Speed Value");
             
             StackContainer speedStack = Builder.NewStackContainer("speed")
@@ -136,7 +136,7 @@ namespace MiningDumpingMod
             simStepLabel.AppendTo(speedStack, 30f, new Offset(0,5,0,0));
 
             speedStack.AppendTo(itemContainer);
-#if false
+
             AddSectionTitle(itemContainer, "Progress");
 
             progressLabel = Builder

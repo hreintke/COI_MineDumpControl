@@ -44,7 +44,6 @@ namespace MiningDumpingMod
             _shortcutsManager = shortcutsManager;
             _towerAreasRenderer = towerAreasRenderer;
             _towerAreasAndDesignatorsActivator = towerAreasRenderer.CreateCombinedActivatorWithTerrainDesignatorsAndGrid();
-
         }
   
         protected override MDTowerWindowView GetView() => this._windowView;
@@ -90,7 +89,7 @@ namespace MiningDumpingMod
                 {
                     this._terrainOutlineRenderer.Hide();
                     this._highlightedArea = new RectangleTerrainArea2i?();
-                    this._areaSelectionTool.SetEdgeSizeLimit(new RelTile1i(50));// this.SelectedEntity.Prototype.Area.MaxAreaEdgeSize);
+                    this._areaSelectionTool.SetEdgeSizeLimit(new RelTile1i(this.SelectedEntity.Prototype.maxAreaSize)); //new RelTile1i(150));//
                     this._areaSelectionTool.Activate(true);
                     return true;
                 }
@@ -111,8 +110,6 @@ namespace MiningDumpingMod
 
         protected override void OnActivated()
         {
-            Option<IAreaManagingTower> ot = Option<IAreaManagingTower>.Some(SelectedEntity);
-
             _towerAreasRenderer.SelectTowerArea(Option<IAreaManagingTower>.Some(SelectedEntity));
             _towerAreasAndDesignatorsActivator.Activate();
         }
