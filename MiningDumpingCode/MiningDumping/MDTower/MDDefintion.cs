@@ -274,6 +274,7 @@ namespace MiningDumpingMod
             {
                 dumpCurrentTile();
                 dumpCurrentTile();
+                dumpCurrentTile();
             }
         }
 
@@ -447,14 +448,17 @@ namespace MiningDumpingMod
             {
                 return;
             }
+            PartialQuantity mined = PartialQuantity.Zero;
+            
             Tile2i t = getNextMineTile();
-            if (t != new Tile2i())
+            while ((t != new Tile2i()) && (mined.Value < 3.ToFix32()))
             {
-                mineTile(t);
+                mined += mineTile(t);
+                t = getNextMineTile();
             }
         }
 
-    public void mineTile(Tile2i txi)
+        public PartialQuantity mineTile(Tile2i txi)
         {
             HeightTilesF requestedHeight = mineDesignations[mineDesignationIndex].GetTargetHeightAt(txi);
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
@@ -464,6 +468,7 @@ namespace MiningDumpingMod
             Context.TerrainManager.DisruptExactly(txia , currentHeight - requestedHeight);
             totalMined += tts.ToPartialProductQuantity(Context.TerrainManager).Quantity.Value;
             minedProducts.AddProduct(tts.ToPartialProductQuantity(Context.TerrainManager));
+            return tts.ToPartialProductQuantity(Context.TerrainManager).Quantity;
         }
 
         private void cleanManagedDesignations()
