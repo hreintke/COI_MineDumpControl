@@ -275,6 +275,7 @@ namespace MiningDumpingMod
                 dumpCurrentTile();
                 dumpCurrentTile();
                 dumpCurrentTile();
+                dumpCurrentTile();
             }
         }
 

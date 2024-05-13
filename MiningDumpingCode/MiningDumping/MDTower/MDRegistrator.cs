@@ -16,6 +16,7 @@ using Mafi;
 using static Mafi.Core.Entities.Static.Layout.LayoutEntityProto;
 using Mafi.Core.PropertiesDb;
 using UnityEngine;
+using static RTG.Object2ObjectSnap;
 
 namespace MiningDumpingMod
 {
@@ -43,8 +44,8 @@ namespace MiningDumpingMod
             EntityCosts ec = ecTpl.MapToEntityCosts(registrator);
 
             LayoutEntityProto.Gfx lg =
-                 new LayoutEntityProto.Gfx("Assets/Prefabs/MDControlBuilding2.prefab",
-                customIconPath: "Assets/Prefabs/building3.png",
+                 new LayoutEntityProto.Gfx("Assets/MiningDumpingMod/MDControlBuildingCollider.prefab",
+                customIconPath: "Assets/MiningDumpingMod/Building256.png",
 
                 categories: new ImmutableArray<ToolbarCategoryProto>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)))
                 ;
@@ -52,7 +53,7 @@ namespace MiningDumpingMod
             MDPrototype bp =
                 new MDPrototype(
                     PrototypeIDs.LocalEntities.MDTowerID, ps, el, ec, lg);
-            bp.maxAreaSize = 150;
+            bp.maxAreaSize = 250;
             bp.maxDistanceFromBuilding = 100;
             registrator.PrototypesDb.Add(bp);
         }

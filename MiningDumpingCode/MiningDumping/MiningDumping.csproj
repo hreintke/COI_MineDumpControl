@@ -38,8 +38,8 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lib.Harmony.2.3.0\lib\net472\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=2.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lib.Harmony.2.3.3\lib\net472\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Mafi">
       <HintPath>..\..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.dll</HintPath>
@@ -93,4 +93,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
+    <Exec Command ="echo 'Build ZIP to [$(ProjectDir)\$(MSBuildProjectName).zip]'"/>
+    <Exec Command ="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)\$(MSBuildProjectName).zip' -Force"/>
+  </Target>
 </Project>

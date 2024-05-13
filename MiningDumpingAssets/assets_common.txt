@@ -1,9 +1,9 @@
-prefabs_3e09
-    Assets/Prefabs/building3.png
+miningdumpingmod_f337
+    Assets/MiningDumpingMod/Building256.png
 
-mdcontrolbuilding1_87ba
-    Assets/Prefabs/MDControlBuilding1.prefab
+mdcontrolbuilding2_67ed
+    Assets/MiningDumpingMod/MDControlBuilding2.prefab
 
-mdcontrolbuilding2_fa61
-    Assets/Prefabs/MDControlBuilding2.prefab
+mdcontrolbuildingcollider_3701
+    Assets/MiningDumpingMod/MDControlBuildingCollider.prefab
 

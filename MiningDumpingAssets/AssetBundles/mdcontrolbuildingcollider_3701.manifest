@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+CRC: 190653347
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 2e2c1c693e3f1259a628ac86d1a9d1a8
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 0b57f674c07541440b80062ddecc5d89
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 65
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/MiningDumpingMod/MDControlBuildingCollider.prefab
+Dependencies: []

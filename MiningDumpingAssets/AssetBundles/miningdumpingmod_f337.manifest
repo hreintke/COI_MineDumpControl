@@ -1,0 +1,17 @@
+ManifestFileVersion: 0
+CRC: 1121756286
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: facaab2dd7dfb74a2fe68a0360a30e45
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 2612ac43db082a73502ee80f2eceb73f
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/MiningDumpingMod/Building256.png
+Dependencies: []
