@@ -44,7 +44,7 @@ namespace MiningDumpingMod
             EntityCosts ec = ecTpl.MapToEntityCosts(registrator);
 
             LayoutEntityProto.Gfx lg =
-                 new LayoutEntityProto.Gfx("Assets/MiningDumpingMod/MDControlBuildingCollider.prefab",
+                 new LayoutEntityProto.Gfx("Assets/MiningDumpingMod/MDControlBuilding2.prefab",
                 customIconPath: "Assets/MiningDumpingMod/Building256.png",
 
                 categories: new ImmutableArray<ToolbarCategoryProto>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)))

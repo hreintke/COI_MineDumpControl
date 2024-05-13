@@ -96,6 +96,6 @@
 
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
     <Exec Command ="echo 'Build ZIP to [$(ProjectDir)\$(MSBuildProjectName).zip]'"/>
-    <Exec Command ="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)\$(MSBuildProjectName).zip' -Force"/>
+    <Exec Command ="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)MiningDumpingMod.zip' -Force"/>
   </Target>
 </Project>
