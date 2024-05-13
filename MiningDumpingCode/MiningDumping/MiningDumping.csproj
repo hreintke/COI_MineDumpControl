@@ -95,7 +95,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
-    <Exec Command ="echo 'Build ZIP to [$(ProjectDir)\$(MSBuildProjectName).zip]'"/>
+    <Exec Command ="echo 'Build ZIP to [$(ProjectDir)MiningDumpingMod.zip]'"/>
     <Exec Command ="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)MiningDumpingMod.zip' -Force"/>
   </Target>
 </Project>

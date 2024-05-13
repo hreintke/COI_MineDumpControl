@@ -248,7 +248,7 @@ namespace MiningDumpingMod
 
         private void dumpTile(Tile2i txi)
         {
-            ProductQuantity pq = tobeDumpedProducts.getSomeProduct(Quantity.One);
+            ProductQuantity pq = tobeDumpedProducts.getSomeProduct(4.Quantity());
             if (pq == ProductQuantity.None)
             {
                 return;
@@ -273,9 +273,9 @@ namespace MiningDumpingMod
             if ((CurrentState == State.Working) || (CurrentState == State.BufferIssue))
             {
                 dumpCurrentTile();
-                dumpCurrentTile();
-                dumpCurrentTile();
-                dumpCurrentTile();
+//                dumpCurrentTile();
+//                dumpCurrentTile();
+//                dumpCurrentTile();
             }
         }
 
