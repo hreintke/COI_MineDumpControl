@@ -24,6 +24,8 @@ using System.Reflection;
 using Mafi.Unity.Utils;
 using Mafi.Core.Maintenance;
 using Mafi.Core.Vehicles.Jobs;
+using Mafi.Core.Terrain.Props;
+using UnityEngine;
 
 namespace MiningDumpingMod
 {
@@ -173,7 +175,7 @@ namespace MiningDumpingMod
                         }
 
                     }
-                    
+              
 
                 }
             }
@@ -307,6 +309,13 @@ namespace MiningDumpingMod
             designation.AddManagingTower((IAreaManagingTower)this);
             this.managedDesignations.AddAndAssertNew(designation);
             recreateManagedDestinationsLysts();
+            if (_designationManager.TerrainPropsManager.ContainsPropInDesignation(designation))
+            {
+                for (int ix = 0; ix < 25; ix++)
+                {
+                    clearProps(designation.OriginTileCoord + new RelTile2i().Rel4Index(ix));
+                }
+              }
         }
 
         private void designationRemoved(TerrainDesignation designation)
@@ -496,7 +505,39 @@ namespace MiningDumpingMod
                 this.designationAdded(designation);
             }
             _mdManager.InvokeOnAreaChanged(this, oldArea);
-         }
+        }
+
+        /// <summary>
+        /// Remove props from a tile (Bushes etc)
+        /// - Taken from MiningJob.handleMining()
+        /// </summary>
+        /// <param name="tile">Tile2i of location</param>
+        private void clearProps(Tile2i tile)
+        {
+            TerrainPropsManager tpm = _designationManager.TerrainPropsManager;
+
+            if (tpm.TerrainTileToProp.TryGetValue(tile.AsSlim, out TerrainPropId key))
+            {
+                if (!tpm.TerrainProps.TryGetValue(key, out TerrainPropData propData))
+                {
+                    LogWrite.Info($"clearProps: PropData not found for {key}");
+                }
+                else if (!tpm.TryRemovePropAtTile(tile, false))
+                {
+                    LogWrite.Info($"clearProps: PropData not found for {key}");
+                }
+                else
+                {
+                    if (propData.Proto.ProductWhenHarvested.IsNotEmpty)
+                    {
+                        //Send Prop product to shipyard
+                        ProductQuantity pq = propData.Proto.ProductWhenHarvested.ScaledBy(propData.Scale);
+                        Context.ProductsManager.ProductCreated(pq.Product, pq.Quantity, CreateReason.MinedFromTerrain);
+                        Context.AssetTransactionManager.StoreClearedProduct(pq);
+                    }
+                }
+            }
+        }
 
         public string statusInfo()
         {
