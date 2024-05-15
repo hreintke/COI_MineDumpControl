@@ -209,7 +209,6 @@ namespace MiningDumpingMod
                         break;
                 }
             }));
-            updaterBuilder.Observe<int>((Func<int>)(() => this.Entity.simStepCount)).Do((Action<int>)(pc => { simStepLabel.SetText(Entity.simStepCount.ToString()); }));
             updaterBuilder.Observe<Quantity>((Func<Quantity>)(() => this.Entity.mineBufferQuantity)).Do(q => { mineBufferBar.UpdateValues(Entity.mineBufferMax, Entity.mineBufferQuantity); });
             updaterBuilder.Observe<Quantity>((Func<Quantity>)(() => this.Entity.dumpBufferQuantity)).Do(q => { dumpBufferBar.UpdateValues(Entity.dumpBufferMax, Entity.dumpBufferQuantity); });
 

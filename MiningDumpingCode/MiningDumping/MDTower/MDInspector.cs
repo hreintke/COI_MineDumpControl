@@ -110,14 +110,16 @@ namespace MiningDumpingMod
 
         protected override void OnActivated()
         {
+            base.OnActivated();
             _towerAreasRenderer.SelectTowerArea(Option<IAreaManagingTower>.Some(SelectedEntity));
             _towerAreasAndDesignatorsActivator.Activate();
         }
 
         protected override void OnDeactivated()
         {
-         _towerAreasAndDesignatorsActivator.Deactivate();
-         _towerAreasRenderer.SelectTowerArea((Option<IAreaManagingTower>)Option.None);
+            base.OnDeactivated();
+             _towerAreasAndDesignatorsActivator.Deactivate();
+             _towerAreasRenderer.SelectTowerArea((Option<IAreaManagingTower>)Option.None);
             this.deactivateAreaEditing();
         }
     }
