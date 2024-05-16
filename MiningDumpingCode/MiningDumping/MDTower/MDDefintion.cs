@@ -26,6 +26,7 @@ using Mafi.Core.Maintenance;
 using Mafi.Core.Vehicles.Jobs;
 using Mafi.Core.Terrain.Props;
 using UnityEngine;
+using Mafi.Unity.Terrain;
 
 namespace MiningDumpingMod
 {
@@ -83,6 +84,7 @@ namespace MiningDumpingMod
         private readonly TowerAreasRenderer _towerAreasRenderer;
         private readonly MDManager _mdManager;
         public IEntityMaintenanceProvider _maintenance { get; private set; }
+        private TerrainRectSelection terrainRectSelection;
 
         public RectangleTerrainArea2i Area { get { return minableArea; } }
         public int maxAreaSize = 150;
@@ -250,6 +252,7 @@ namespace MiningDumpingMod
 
         private void dumpTile(Tile2i txi)
         {
+            terrainRectSelection.SetArea(dumpDesignations[currentDesignationIndex].Area, UnityEngine.Color.green);
             ProductQuantity pq = tobeDumpedProducts.getSomeProduct(4.Quantity());
             if (pq == ProductQuantity.None)
             {
@@ -355,6 +358,18 @@ namespace MiningDumpingMod
             return s;
         }
 
+        public void showActiveRectangle()
+        {
+            if (isDumping || isMining)
+            {
+                terrainRectSelection.Show();
+            }
+            else
+            {
+                terrainRectSelection.Hide();
+            }
+        }
+
         public void setMining(bool mining)
         {
             isMining = mining;
@@ -362,6 +377,7 @@ namespace MiningDumpingMod
             {
                 isDumping = false;
             }
+            showActiveRectangle();
         }
 
         public void setDumping(bool dumping)
@@ -371,6 +387,7 @@ namespace MiningDumpingMod
             {
                 isMining = false;
             }
+            showActiveRectangle();
         }
 
         public override bool CanBePaused => true;
@@ -470,6 +487,7 @@ namespace MiningDumpingMod
 
         public PartialQuantity mineTile(Tile2i txi)
         {
+            terrainRectSelection.SetArea(mineDesignations[mineDesignationIndex].Area, UnityEngine.Color.yellow);
             HeightTilesF requestedHeight = mineDesignations[mineDesignationIndex].GetTargetHeightAt(txi);
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
             HeightTilesF currentHeight = Context.TerrainManager.GetHeight(txi);
@@ -675,6 +693,13 @@ namespace MiningDumpingMod
             reader.SetField(this, "mineDesignationIndex", reader.ReadInt());
             reader.SetField(this, "currentDesignationIndex", reader.ReadInt());
             maxAreaSize = _proto.maxAreaSize;
+            reader.RegisterInitAfterLoad<MDTower>(this, "initSelf", InitPriority.Normal);
+        }
+
+        [InitAfterLoad(InitPriority.Normal)]
+        private void initSelf(int saveVersion, DependencyResolver resolver)
+        {
+            terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
         }
 
         static MDTower()
