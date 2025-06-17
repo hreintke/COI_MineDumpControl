@@ -41,13 +41,14 @@ namespace MiningDumpingMod
 
 
             EntityCostsTpl ecTpl = new EntityCostsTpl.Builder().CP3(100).Glass(20).MaintenanceT3(20).Workers(20);
+//            EntityCostsTpl ecTpl = new EntityCostsTpl.Builder().CP(1).MaintenanceT1(2);
             EntityCosts ec = ecTpl.MapToEntityCosts(registrator);
 
             LayoutEntityProto.Gfx lg =
                  new LayoutEntityProto.Gfx("Assets/MiningDumpingMod/MDControlBuilding2.prefab",
                 customIconPath: "Assets/MiningDumpingMod/Building256.png",
 
-                categories: new ImmutableArray<ToolbarCategoryProto>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)))
+                categories: new ImmutableArray<ToolbarEntryData>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)))
                 ;
 
             MDPrototype bp =

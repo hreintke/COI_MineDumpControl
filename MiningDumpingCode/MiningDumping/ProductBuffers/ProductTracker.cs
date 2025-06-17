@@ -65,7 +65,7 @@ namespace MiningDumpingMod
 
         internal void Reset(Quantity maxCapacity, VehicleCargo currentCargo)
         {
-            m_minedProducts.ClearSkipZeroingMemory();
+            m_minedProducts.Clear();
             m_maxCapacity = maxCapacity;
             m_usedCapacity = Quantity.Zero;
             Lyst<KeyValuePair<ProductProto, Quantity>>.Enumerator enumerator = currentCargo.GetEnumerator();
@@ -123,7 +123,7 @@ namespace MiningDumpingMod
         internal LystStruct<LooseProductQuantity> FinalProductsReadonly()
         {
             Assert.That(m_usedCapacity).IsLessOrEqual(m_maxCapacity);
-            m_finalProducts.ClearSkipZeroingMemory();
+            m_finalProducts.Clear();
             LystStruct<KeyValuePair<ProductProto, PartialQuantity>>.Enumerator enumerator = m_minedProducts.GetEnumerator();
             while (enumerator.MoveNext())
             {

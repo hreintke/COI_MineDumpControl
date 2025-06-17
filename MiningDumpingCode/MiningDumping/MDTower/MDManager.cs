@@ -6,6 +6,8 @@ using Mafi.Core.Entities;
 using Mafi.Core.Terrain;
 using Mafi.Serialization;
 using System;
+using Mafi.Unity.Mine;
+using System.Reflection;
 
 namespace MiningDumpingMod
 {
@@ -17,7 +19,7 @@ namespace MiningDumpingMod
 
         private readonly Event<MDTower, EntityRemoveReason> m_onMDRemoved;
 
-        private readonly Event<MDTower, RectangleTerrainArea2i> m_onAreaChange;
+        private readonly Event<MDTower, PolygonTerrainArea2i> m_onAreaChange;
 
         private readonly EntitiesManager m_entitiesManager;
 
@@ -31,19 +33,22 @@ namespace MiningDumpingMod
 
         public IEvent<MDTower, EntityRemoveReason> OnMDRemoved => m_onMDRemoved;
 
-        public IEvent<MDTower, RectangleTerrainArea2i> OnAreaChange => m_onAreaChange;
+        public IEvent<MDTower, PolygonTerrainArea2i> OnAreaChange => m_onAreaChange;
 
         public IIndexable<MDTower> MDs => m_MDs;
 
-        public MDManager(EntitiesManager entitiesManager)
+        private TowerAreasRenderer towerAreasRenderer;
+
+        public MDManager(EntitiesManager entitiesManager, TowerAreasRenderer tr)
         {
             m_onMDAdded = new Event<MDTower, EntityAddReason>();
             m_onMDRemoved = new Event<MDTower, EntityRemoveReason>();
-            m_onAreaChange = new Event<MDTower, RectangleTerrainArea2i>();
+            m_onAreaChange = new Event<MDTower, PolygonTerrainArea2i>();
             m_MDs = new Lyst<MDTower>();
             m_entitiesManager = entitiesManager;
             entitiesManager.EntityAddedFull.Add(this, entityAdded);
             entitiesManager.EntityRemovedFull.Add(this, entityRemoved);
+            towerAreasRenderer = tr;
         }
 
         private void entityAdded(IEntity entity, EntityAddReason addReason)
@@ -53,6 +58,9 @@ namespace MiningDumpingMod
             {
                 m_MDs.Add(mineMD);
                 m_onMDAdded.Invoke(mineMD, addReason);
+                LogWrite.Info($"MD Manager Invoke add");
+                typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
+                LogWrite.Info($"MD Manager Invoke add Done");
             }
         }
 
@@ -64,10 +72,12 @@ namespace MiningDumpingMod
                 bool value = m_MDs.TryRemoveReplaceLast(mineMD);
                 Assert.That(value).IsTrue();
                 m_onMDRemoved.Invoke(mineMD, removeReason);
+                typeof(TowerAreasRenderer).GetMethod("removeTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
+
             }
         }
 
-        internal void InvokeOnAreaChanged(MDTower tower, RectangleTerrainArea2i oldArea)
+        internal void InvokeOnAreaChanged(MDTower tower, PolygonTerrainArea2i oldArea)
         {
             m_onAreaChange.Invoke(tower, oldArea);
         }
@@ -84,7 +94,8 @@ namespace MiningDumpingMod
         {
             EntitiesManager.Serialize(m_entitiesManager, writer);
             Lyst<MDTower>.Serialize(m_MDs, writer);
-            Event<MDTower, RectangleTerrainArea2i>.Serialize(m_onAreaChange, writer);
+            Event<MDTower, PolygonTerrainArea2i>.Serialize(m_onAreaChange, writer);
+
             Event<MDTower, EntityAddReason>.Serialize(m_onMDAdded, writer);
             Event<MDTower, EntityRemoveReason>.Serialize(m_onMDRemoved, writer);
         }
@@ -103,7 +114,12 @@ namespace MiningDumpingMod
         {
             reader.SetField(this, "m_entitiesManager", EntitiesManager.Deserialize(reader));
             reader.SetField(this, "m_MDs", Lyst<MDTower>.Deserialize(reader));
-            reader.SetField(this, "m_onAreaChange", Event<MDTower, RectangleTerrainArea2i>.Deserialize(reader));
+            reader.SetField<MDManager>(this, "m_onAreaChange", reader.LoadedSaveVersion >= 180 ? (object)Event<MDTower, PolygonTerrainArea2i>.Deserialize(reader) : (object)new Event<MDTower, PolygonTerrainArea2i>());
+            if (reader.LoadedSaveVersion < 180)
+            {
+                Event<MDTower, RectangleTerrainArea2i>.Deserialize(reader);
+   
+            }
             reader.SetField(this, "m_onMDAdded", Event<MDTower, EntityAddReason>.Deserialize(reader));
             reader.SetField(this, "m_onMDRemoved", Event<MDTower, EntityRemoveReason>.Deserialize(reader));
         }

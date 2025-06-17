@@ -1,127 +1,180 @@
-﻿using Mafi.Core.Input;
-using Mafi.Core;
-using Mafi.Unity.InputControl.Inspectors;
-using Mafi.Unity.UserInterface;
+﻿using Mafi.Core.Buildings.Towers;
+using Mafi.Core.Terrain;
 using Mafi;
+using Mafi.Unity.Ui;
+using Mafi.Unity.Ui.Library.Inspectors;
+using Mafi.Unity.UiToolkit.Component;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mafi.Unity.InputControl.AreaTool;
-using Mafi.Core.Terrain;
-using Mafi.Core.Buildings.Mine;
-using Mafi.Unity.Terrain;
 using Mafi.Unity.InputControl;
-using Mafi.Core.Buildings.Towers;
 using Mafi.Unity.Mine;
 using Mafi.Unity.Utils;
+using Mafi.Base;
+using Mafi.Core.Buildings.Mine;
+using Mafi.Unity.UiToolkit.Library;
+using Mafi.Localization;
+using Mafi.Core.Syncers;
+using Mafi.Core;
+using Mafi.Unity.Ui.Library;
+using Mafi.Unity.Ui.Controllers;
+using Mafi.Core.Entities;
 
-namespace MiningDumpingMod
+namespace MiningDumpingMod;
+
+public class MDInspector : BaseInspector<MDTower>
 {
-    [GlobalDependency(RegistrationMode.AsEverything)]
-    public class MDInspector : EntityInspector<MDTower, MDTowerWindowView>
+    private readonly TowerAreasRenderer m_towerAreasRenderer;
+    private readonly IActivator m_towerAreasAndDesignatorsActivator;
+    private readonly PolygonAreaSelectionController m_areaSelectionTool;
+    public bool AreaEditInProgress;
+    private Option<MDTower> m_entityUnderEdit;
+
+    ButtonText ea = new ButtonText("editarea".AsLoc());
+
+    Row buttonRow = new Row().Gap(5).Margin(20);
+    ButtonText mineButton = new ButtonText("Mining".AsLoc()).Width(100.px());
+    ButtonText dumpButton = new ButtonText("Dumping".AsLoc()).Width(100.px());
+    ButtonText stopButton = new ButtonText("Stop".AsLoc()).Width(100.px());
+    ButtonText editButton = new ButtonText("Edit Area".AsLoc()).Width(100.px());
+
+    ProductBufferUi miningBufferUi = new ProductBufferUi().Margin(20).Height(25);
+    ProductBufferUi dumpingBuffferUi = new ProductBufferUi().Margin(20).Height(25);
+
+    Label miningBufferLabel = new Label("MiningBuffer".AsLoc()).FontSize(15).Margin(20);
+    Label dumpingBufferLabel = new Label("DumpinfBuffer".AsLoc()).FontSize(15).Margin(20);
+
+    Panel buttonPanel = new Panel();
+
+
+    public MDInspector(
+      UiContext context,
+      TowerAreasRenderer towerAreasRenderer,
+      AssignedBuildingsHighlighter highlighter,
+      BuildingsAssigner buildingsAssigner,
+      NewInstanceOf<PolygonAreaSelectionController> areaSelectionTool) : base(context)
     {
-        private MDTowerWindowView _windowView;
-        private readonly AreaSelectionTool _areaSelectionTool;
-        private readonly TerrainRectSelection _terrainOutlineRenderer;
-        private RectangleTerrainArea2i? _highlightedArea;
-        private readonly ShortcutsManager _shortcutsManager;
-        private readonly TowerAreasRenderer _towerAreasRenderer;
-        private readonly IActivator _towerAreasAndDesignatorsActivator;
+        this.m_towerAreasRenderer = towerAreasRenderer;
+        this.m_towerAreasAndDesignatorsActivator = towerAreasRenderer.CreateCombinedActivatorWithTerrainDesignatorsAndGrid();
+        this.m_areaSelectionTool = areaSelectionTool.Instance;
 
-        public bool AreaEditInProgress;
+        mineButton.OnClick(() => { Entity.setMining(true); });
+        dumpButton.OnClick(() => { Entity.setDumping(true); });
+        stopButton.OnClick(() => { Entity.setMining(false); Entity.setDumping(false); });
+        editButton.OnClick(activateAreaEditing);
 
-        public MDInspector(InspectorContext inspectorContext, 
-                                     AreaSelectionToolFactory areaToolFactory,
-                                     TerrainRectSelection terrainOutlineRenderer,
-                                     ShortcutsManager shortcutsManager,
-                                     TowerAreasRenderer towerAreasRenderer) : base(inspectorContext)
-        {
-            _windowView = new MDTowerWindowView(this);
-            _areaSelectionTool = areaToolFactory.CreateInstance((Action<RectangleTerrainArea2i, bool>)((x, y) => { }), new Action<RectangleTerrainArea2i, bool>(this.selectionDone), new Action(this.deactivateAreaEditing), (Action)(() => { }));
-            _terrainOutlineRenderer = terrainOutlineRenderer;
-            _shortcutsManager = shortcutsManager;
-            _towerAreasRenderer = towerAreasRenderer;
-            _towerAreasAndDesignatorsActivator = towerAreasRenderer.CreateCombinedActivatorWithTerrainDesignatorsAndGrid();
-        }
-  
-        protected override MDTowerWindowView GetView() => this._windowView;
+        buttonRow.Add(mineButton);
+        buttonRow.Add(dumpButton);
+        buttonRow.Add(stopButton);
+        buttonRow.Add(editButton);
 
-        private void selectionDone(RectangleTerrainArea2i area, bool leftClick)
+        buttonPanel.Add(buttonRow);
+        buttonPanel.Add(miningBufferLabel);
+        buttonPanel.Add(miningBufferUi);
+        buttonPanel.Add(dumpingBufferLabel);
+        buttonPanel.Add(dumpingBuffferUi);
+
+        this.Body.Add(buttonPanel);
+
+
+        this.Observe<MDTower.State>((Func<MDTower.State>)(() => this.Entity.CurrentState)).Do((Action<MDTower.State>)(state =>
         {
-            SelectedEntity.editMinableArea(area);
-            this.ToggleAreaEditing();
-        }
-        public void ToggleAreaEditing()
-        {
-            if (this.AreaEditInProgress)
+            switch (state)
             {
-                this.deactivateAreaEditing();
-                this._windowView.Show();
-            }
-            else
-            {
-                this._areaSelectionTool.TerrainCursor.Activate();
-                this._windowView.Hide();
-                this.AreaEditInProgress = true;
-            }
-        }
-
-        private void deactivateAreaEditing()
-        {
-            if (!this.AreaEditInProgress)
-                return;
-            this._areaSelectionTool.Deactivate();
-            this._areaSelectionTool.TerrainCursor.Deactivate();
-            this._terrainOutlineRenderer.Hide();
-            this._highlightedArea = new RectangleTerrainArea2i?();
-            this.AreaEditInProgress = false;
-        }
-
-        public override bool InputUpdate(IInputScheduler inputScheduler)
-        {
-            if (this._areaSelectionTool.IsActive)
-                return true;
-            if (this.AreaEditInProgress)
-            {
-                if (this._shortcutsManager.IsPrimaryActionDown)
-                {
-                    this._terrainOutlineRenderer.Hide();
-                    this._highlightedArea = new RectangleTerrainArea2i?();
-                    this._areaSelectionTool.SetEdgeSizeLimit(new RelTile1i(this.SelectedEntity.Prototype.maxAreaSize)); //new RelTile1i(150));//
-                    this._areaSelectionTool.Activate(true);
-                    return true;
-                }
-                if (this._areaSelectionTool.TerrainCursor.HasValue)
-                {
-                    RectangleTerrainArea2i area = new RectangleTerrainArea2i(this._areaSelectionTool.TerrainCursor.Tile2i, RelTile2i.One);
-                    RectangleTerrainArea2i rectangleTerrainArea2i = area;
-                    RectangleTerrainArea2i? highlightedArea = this._highlightedArea;
-                    if ((highlightedArea.HasValue ? (rectangleTerrainArea2i != highlightedArea.GetValueOrDefault() ? 1 : 0) : 1) != 0)
+                case MDTower.State.None:
+                    this.Status.As(Tr.EntityStatus__Idle, DisplayState.Neutral);
+                    break;
+                case MDTower.State.Working:
+                    if (Entity.isMining)
                     {
-                        this._terrainOutlineRenderer.SetArea(area, AreaSelectionTool.SELECT_COLOR);
-                        this._highlightedArea = new RectangleTerrainArea2i?(area);
+                        this.Status.As("Mining".AsLoc(), DisplayState.Positive);
                     }
-                }
+                    else if (Entity.isDumping)
+                    {
+                        this.Status.As("Dumping".AsLoc(), DisplayState.Positive);
+                    }
+                    else
+                    {
+                        this.Status.AsWorking();
+                    }
+                    break;
+                case MDTower.State.Paused:
+                    this.Status.AsPaused();
+                    break;
+                case MDTower.State.NotEnoughWorkers:
+                    this.Status.AsNoWorkers();
+                    break;
+                case MDTower.State.Waiting:
+                    this.Status.As("Waiting".AsLoc(), DisplayState.Positive);
+                    break;
+                case MDTower.State.BufferIssue:
+                    if (Entity.isMining)
+                    {
+                        this.Status.As("Mining Buffer Full".AsLoc(), DisplayState.Positive);
+                    }
+                    else if (Entity.isDumping)
+                    {
+                        this.Status.As("Dumping Buffer Empty".AsLoc(), DisplayState.Positive);
+                    }
+                    else
+                    {
+                        this.Status.As("Buffer Issue".AsLoc(), DisplayState.Positive);
+                    }
+                    break;
             }
-            return base.InputUpdate(inputScheduler);
-        }
+        }));
 
-        protected override void OnActivated()
-        {
-            base.OnActivated();
-            _towerAreasRenderer.SelectTowerArea(Option<IAreaManagingTower>.Some(SelectedEntity));
-            _towerAreasAndDesignatorsActivator.Activate();
-        }
-
-        protected override void OnDeactivated()
-        {
-            base.OnDeactivated();
-             _towerAreasAndDesignatorsActivator.Deactivate();
-             _towerAreasRenderer.SelectTowerArea((Option<IAreaManagingTower>)Option.None);
-            this.deactivateAreaEditing();
-        }
+        this.Observe<Quantity>((Func<Quantity>)(() => this.Entity.mineBufferQuantity)).Do(q => { miningBufferUi.Values(Entity.mineBufferQuantity, Entity.mineBufferMax); });
+        this.Observe<Quantity>((Func<Quantity>)(() => this.Entity.dumpBufferQuantity)).Do(q => { dumpingBuffferUi.Values(Entity.dumpBufferQuantity, Entity.dumpBufferMax); });
     }
 
+    protected override void OnActivated()
+    {   
+        base.OnActivated();
+        LogWrite.Info($"activating MD inspector {this.Entity.Id}");
+        this.m_towerAreasRenderer.HighlightTowerArea((Option<IAreaManagingTower>)this.Entity);
+        this.m_towerAreasAndDesignatorsActivator.ActivateIfNotActive();
+        this.m_entityUnderEdit = Option<MDTower>.None;
+        LogWrite.Info($"activated  MD inspector {this.Entity.Id}");
+    }
+
+    protected override void OnDeactivated()
+    {
+        base.OnDeactivated();
+        if (this.m_entityUnderEdit.IsNone)
+            this.m_towerAreasAndDesignatorsActivator.DeactivateIfActive();
+        this.m_towerAreasRenderer.HighlightTowerArea((Option<IAreaManagingTower>)Option.None);
+    }
+
+    private void onAreaChanged(PolygonTerrainArea2i newArea)
+    {
+        if (!this.m_entityUnderEdit.HasValue)
+            return;
+        this.ScheduleCommand<MineTowerAreaChangeCmd>(new MineTowerAreaChangeCmd(this.m_entityUnderEdit.Value.Id, newArea));
+        m_entityUnderEdit.Value.editMinableArea(newArea);
+    }
+
+    private void deactivateEditing()
+    {
+        this.m_towerAreasAndDesignatorsActivator.DeactivateIfActive();
+        this.m_towerAreasRenderer.MarkAreaUnderEdit(Option<IAreaManagingTower>.None);
+    }
+
+    private void reopen()
+    {
+        if (this.m_entityUnderEdit.HasValue)
+            this.Context.InspectorsManager.TryActivateFor((IEntity)this.m_entityUnderEdit.Value);
+        this.m_entityUnderEdit = Option<MDTower>.None;
+    }
+
+    private void activateAreaEditing()
+    {
+        this.m_entityUnderEdit = (Option<MDTower>)this.Entity;
+        this.m_towerAreasRenderer.MarkAreaUnderEdit((Option<IAreaManagingTower>)this.Entity);
+        this.m_areaSelectionTool.BeginEdit(this.Entity.Area, 400.ToFix32(), new Action(this.deactivateEditing), new Action(this.reopen), new Action<PolygonTerrainArea2i>(this.onAreaChanged));
+    }
 }
+

@@ -27,6 +27,7 @@ using Mafi.Core.Vehicles.Jobs;
 using Mafi.Core.Terrain.Props;
 using UnityEngine;
 using Mafi.Unity.Terrain;
+using Mafi.Core.Terrain;
 
 namespace MiningDumpingMod
 {
@@ -37,11 +38,13 @@ namespace MiningDumpingMod
         public MDTower(EntityId id, MDPrototype proto, TileTransform transform, EntityContext context,
             TerrainDesignationsManager designationManager,
             MDManager mdManager,
-            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory) : base(id, proto, transform, context)
+            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory,
+            TerrainRectSelection trs) : base(id, proto, transform, context)
         {
             _proto = proto;
-            minableArea = new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10).AddX(-5), new RelTile2i(10, 10));
+            minableArea = PolygonTerrainArea2i.FromRectArea(new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10).AddX(-5), new RelTile2i(10, 10)));
             _designationManager = designationManager;
+            terrainRectSelection = trs;
 
             _designationManager.DesignationAdded.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationAdded));
             _designationManager.DesignationRemoved.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationRemoved));
@@ -79,14 +82,15 @@ namespace MiningDumpingMod
         private readonly TerrainManager _terrainManager;
         private readonly ITerrainDesignationsManager _designationManager;
         private MDPrototype _proto;
-        private RectangleTerrainArea2i minableArea;
+        private PolygonTerrainArea2i minableArea;
+        private RectangleTerrainArea2i minableArea_old;
         private ProductsManager _productsManager;
         private readonly TowerAreasRenderer _towerAreasRenderer;
         private readonly MDManager _mdManager;
         public IEntityMaintenanceProvider _maintenance { get; private set; }
         private TerrainRectSelection terrainRectSelection;
 
-        public RectangleTerrainArea2i Area { get { return minableArea; } }
+        public PolygonTerrainArea2i Area { get { return minableArea; } }
         public int maxAreaSize = 150;
 
         private PartialProductsBuffer minedProducts = new PartialProductsBuffer(new PartialQuantity(100));
@@ -509,9 +513,9 @@ namespace MiningDumpingMod
             dumpDesignations.Clear();
          }
 
-        public void editMinableArea(RectangleTerrainArea2i newArea)
+        public void editMinableArea(PolygonTerrainArea2i newArea)
         {
-            RectangleTerrainArea2i oldArea = minableArea;
+            PolygonTerrainArea2i oldArea = minableArea;
             cleanManagedDesignations();
             minableArea = newArea;
             mineDesignationIndex = -1;
@@ -617,7 +621,7 @@ namespace MiningDumpingMod
             writer.WriteBool(isMining);
             writer.WriteBool(isDumping);
             writer.WriteInt(simStepCount);
-            RectangleTerrainArea2i.Serialize(minableArea, writer);
+            PolygonTerrainArea2i.Serialize(minableArea, writer);
             PartialProductsBuffer.Serialize(minedProducts, writer);
             ProductQuantity.Serialize(sendInProgress, writer);
             PartialProductsBuffer.Serialize(tobeDumpedProducts, writer);
@@ -678,7 +682,9 @@ namespace MiningDumpingMod
             reader.SetProperty(this, "isMining", reader.ReadBool());
             reader.SetProperty(this, "isDumping", reader.ReadBool());
             reader.SetProperty(this, "simStepCount", reader.ReadInt());
-            minableArea = RectangleTerrainArea2i.Deserialize(reader);
+            if (reader.LoadedSaveVersion < 180)
+                minableArea_old = RectangleTerrainArea2i.Deserialize(reader);
+            minableArea = reader.LoadedSaveVersion >= 180 ? PolygonTerrainArea2i.Deserialize(reader) : new PolygonTerrainArea2i();
             minedProducts = PartialProductsBuffer.Deserialize(reader);
             sendInProgress = ProductQuantity.Deserialize(reader);
             tobeDumpedProducts = PartialProductsBuffer.Deserialize(reader);
@@ -700,6 +706,8 @@ namespace MiningDumpingMod
         private void initSelf(int saveVersion, DependencyResolver resolver)
         {
             terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
+            if (saveVersion < 180)
+                minableArea = PolygonTerrainArea2i.FromRectArea(minableArea_old);
         }
 
         static MDTower()

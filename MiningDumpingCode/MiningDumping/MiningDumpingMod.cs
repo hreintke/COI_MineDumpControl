@@ -16,8 +16,8 @@ namespace MiningDumpingMod
     {
         public string Name => "MiningDumpingMod";
 
-        public int Version => 31;
-        public static Version ModVersion = new Version(3, 1, 0);
+        public int Version => 101;
+ //       public static Version ModVersion = new Version(7, 3, 0);
         public bool IsUiOnly => false;
 
         public Option<IConfig> ModConfig { get; }
@@ -28,7 +28,7 @@ namespace MiningDumpingMod
 
         public void Initialize(DependencyResolver resolver, bool gameWasLoaded)
         {
-            LogWrite.Info("Initializing ");
+            LogWrite.Info($"Initializing v = {Version}");
         }
 
         public void RegisterDependencies(DependencyResolverBuilder depBuilder, ProtosDb protosDb, bool gameWasLoaded)

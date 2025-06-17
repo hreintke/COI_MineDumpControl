@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiningDumpingMod</RootNamespace>
     <AssemblyName>MiningDumpingMod</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -70,6 +70,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>..\..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\Extensions.cs" />
@@ -78,12 +81,10 @@
     <Compile Include="MDTower\MDDefintion.cs" />
     <Compile Include="MDTower\MDHarmony.cs" />
     <Compile Include="MDTower\MDInspector.cs" />
-    <Compile Include="MDTower\MDInspectorAbstract.cs" />
     <Compile Include="MDTower\MDManager.cs" />
     <Compile Include="MDTower\MDPrototype.cs" />
     <Compile Include="MDTower\MDRegistrator.cs" />
     <Compile Include="MDTower\MDResearch.cs" />
-    <Compile Include="MDTower\MDView.cs" />
     <Compile Include="MiningDumpingMod.cs" />
     <Compile Include="ProductBuffers\PartialProductsBuffer.cs" />
     <Compile Include="ProductBuffers\ProductTracker.cs" />
@@ -93,9 +94,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
-    <Exec Command ="echo 'Build ZIP to [$(ProjectDir)MiningDumpingMod.zip]'"/>
-    <Exec Command ="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)MiningDumpingMod.zip' -Force"/>
+    <Exec Command="echo 'Build ZIP to [$(ProjectDir)MiningDumpingMod.zip]'" />
+    <Exec Command="powershell Compress-Archive -Path '$(OutDir)\AssetBundles', '$(OutDir)MiningDumpingMod.dll', '$(OutDir)0harmony.dll' -DestinationPath '$(ProjectDir)MiningDumpingMod.zip' -Force" />
   </Target>
 </Project>

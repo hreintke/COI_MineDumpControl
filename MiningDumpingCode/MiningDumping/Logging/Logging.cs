@@ -16,8 +16,6 @@ namespace MiningDumpingMod
 
         public static void Info(string message) => Mafi.Log.Info($"{Prefix} {++msgCount} {message}");
 
-        public static void InfoDebug(string message) => Mafi.Log.InfoDebug($"{Prefix} {++msgCount} {message}");
-
         public static void Warning(string message) => Mafi.Log.Warning($"{Prefix} {++msgCount} {message}");
 
         public static void WarningOnce(string message) => Mafi.Log.WarningOnce($"{Prefix} {++msgCount} {message}");

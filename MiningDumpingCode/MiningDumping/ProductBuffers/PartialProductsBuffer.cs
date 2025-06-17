@@ -4,7 +4,6 @@ using Mafi.Core;
 using Mafi.Core.Products;
 using Mafi.Core.Terrain;
 using Mafi.Serialization;
-using Mafi.Unity.UiFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,7 +96,7 @@ namespace MiningDumpingMod
 
         public LystStruct<LooseProductQuantity> FinalProductsReadonly()
         {
-            finalProducts.ClearSkipZeroingMemory();
+            finalProducts.Clear();
             LystStruct<KeyValuePair<ProductProto, PartialQuantity>>.Enumerator enumerator = bufferedProducts.GetEnumerator();
             while (enumerator.MoveNext())
             {

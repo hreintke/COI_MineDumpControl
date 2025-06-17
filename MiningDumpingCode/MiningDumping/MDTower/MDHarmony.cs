@@ -15,10 +15,10 @@ using System.ComponentModel;
 using Mafi.Core.Entities;
 using Mafi.Unity.Utils;
 using Mafi.Core.Terrain;
+using Mafi.Collections;
 
 namespace MiningDumpingMod
 {
-
     [GlobalDependency(RegistrationMode.AsSelf)]
     [HarmonyPatch]
     public class modPatches
@@ -34,41 +34,46 @@ namespace MiningDumpingMod
             _mdManager = mdManager;
         }
 
-        static int cnt = 0;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TowerAreasRenderer), "rendererLoadState")]
         static void Postfix(TowerAreasRenderer __instance)
         {
-            LogWrite.Info($"{cnt++} TowerAreasRender rendererLoadState");
+            LogWrite.Info($"TowerAreasRender rendererLoadState");
+            return;
             IndexableEnumerator<MDTower> enumerator = _mdManager.MDs.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 LogWrite.Info($"Adding MDTower");
                 IAreaManagingTower current = enumerator.Current;
-                typeof(TowerAreasRenderer).GetMethod("addTowerOrUpdateArea", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, (new object[] { current }));
+                typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, (new object[] { current }));
             }
-
-            FieldInfo fo = typeof(TowerAreasRenderer).GetField("m_delayedProcessing", BindingFlags.NonPublic | BindingFlags.Instance);
-            DelayedItemsProcessing<IAreaManagingTower> x = (DelayedItemsProcessing<IAreaManagingTower>)fo.GetValue(__instance);
-
             _mdManager.OnMDAdded.AddNonSaveable(__instance, delegate (MDTower tower, EntityAddReason reason)
             {
-                LogWrite.Info("MDHarmony tower add");
-                x.AddOnSim(tower);
+                FieldInfo fa = typeof(TowerAreasRenderer).GetField("m_onTowerAdded", BindingFlags.NonPublic | BindingFlags.Instance);
+                LystStruct<IAreaManagingTower> towerAdded = (LystStruct<IAreaManagingTower>)fa.GetValue(__instance);
+                towerAdded.Add(tower);
+                fa.SetValue(__instance, towerAdded);
+                LogWrite.Info($"MDTower added {tower.Id}");
             });
-
-            _mdManager.OnAreaChange.AddNonSaveable(__instance, delegate (MDTower tower, RectangleTerrainArea2i oldArea)
+            _mdManager.OnAreaChange.AddNonSaveable(__instance, delegate (MDTower tower, PolygonTerrainArea2i oldArea)
             {
-                LogWrite.Info("MDHarmony area update");
-                x.AddOnSim(tower);
+                FieldInfo fu = typeof(TowerAreasRenderer).GetField("m_onTowerUpdated", BindingFlags.NonPublic | BindingFlags.Instance);
+                LystStruct<IAreaManagingTower> towerUpdated = (LystStruct<IAreaManagingTower>)fu.GetValue(__instance);
+                towerUpdated.Add(tower);
+                fu.SetValue(__instance, towerUpdated);
+                LogWrite.Info($"MDTower areachanged {tower.Id}");
             });
             _mdManager.OnMDRemoved.AddNonSaveable(__instance, delegate (MDTower tower, EntityRemoveReason reason)
             {
-                LogWrite.Info("MDHarmony tower remove");
-                x.RemoveOnSim(tower);
+                FieldInfo fr = typeof(TowerAreasRenderer).GetField("m_onTowerRemoved", BindingFlags.NonPublic | BindingFlags.Instance);
+                LystStruct<IAreaManagingTower> towerRemoved = (LystStruct<IAreaManagingTower>)fr.GetValue(__instance);
+                towerRemoved.Add(tower);
+                fr.SetValue(__instance, towerRemoved);
+                LogWrite.Info($"MDTower removed {tower.Id}");
             });
 
         }
     }
+
 }
 
