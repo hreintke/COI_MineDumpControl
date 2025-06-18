@@ -8,6 +8,8 @@ using Mafi.Serialization;
 using System;
 using Mafi.Unity.Mine;
 using System.Reflection;
+using Mafi.Unity.Terrain;
+using Mafi.Unity;
 
 namespace MiningDumpingMod
 {
@@ -35,9 +37,9 @@ namespace MiningDumpingMod
 
         public IEvent<MDTower, PolygonTerrainArea2i> OnAreaChange => m_onAreaChange;
 
-        public IIndexable<MDTower> MDs => m_MDs;
+        public Lyst<MDTower> MDs => m_MDs;
 
-        private TowerAreasRenderer towerAreasRenderer;
+//        private TowerAreasRenderer towerAreasRenderer;
 
         public MDManager(EntitiesManager entitiesManager, TowerAreasRenderer tr)
         {
@@ -48,7 +50,7 @@ namespace MiningDumpingMod
             m_entitiesManager = entitiesManager;
             entitiesManager.EntityAddedFull.Add(this, entityAdded);
             entitiesManager.EntityRemovedFull.Add(this, entityRemoved);
-            towerAreasRenderer = tr;
+//            towerAreasRenderer = tr;
         }
 
         private void entityAdded(IEntity entity, EntityAddReason addReason)
@@ -57,9 +59,10 @@ namespace MiningDumpingMod
             if (mineMD != null)
             {
                 m_MDs.Add(mineMD);
-                m_onMDAdded.Invoke(mineMD, addReason);
                 LogWrite.Info($"MD Manager Invoke add");
-                typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
+                m_onMDAdded.Invoke(mineMD, addReason);
+  
+               // typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
                 LogWrite.Info($"MD Manager Invoke add Done");
             }
         }
@@ -72,7 +75,7 @@ namespace MiningDumpingMod
                 bool value = m_MDs.TryRemoveReplaceLast(mineMD);
                 Assert.That(value).IsTrue();
                 m_onMDRemoved.Invoke(mineMD, removeReason);
-                typeof(TowerAreasRenderer).GetMethod("removeTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
+                //typeof(TowerAreasRenderer).GetMethod("removeTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(towerAreasRenderer, (new object[] { mineMD }));
 
             }
         }
@@ -98,6 +101,7 @@ namespace MiningDumpingMod
 
             Event<MDTower, EntityAddReason>.Serialize(m_onMDAdded, writer);
             Event<MDTower, EntityRemoveReason>.Serialize(m_onMDRemoved, writer);
+            LogWrite.Info($"MD Manager serialize {m_MDs.Count} towers");
         }
 
         public static MDManager Deserialize(BlobReader reader)
@@ -112,16 +116,18 @@ namespace MiningDumpingMod
 
         protected virtual void DeserializeData(BlobReader reader)
         {
-            reader.SetField(this, "m_entitiesManager", EntitiesManager.Deserialize(reader));
-            reader.SetField(this, "m_MDs", Lyst<MDTower>.Deserialize(reader));
+            reader.SetField<MDManager>(this, "m_entitiesManager", EntitiesManager.Deserialize(reader));
+            reader.SetField<MDManager>(this, "m_MDs", Lyst<MDTower>.Deserialize(reader));
             reader.SetField<MDManager>(this, "m_onAreaChange", reader.LoadedSaveVersion >= 180 ? (object)Event<MDTower, PolygonTerrainArea2i>.Deserialize(reader) : (object)new Event<MDTower, PolygonTerrainArea2i>());
             if (reader.LoadedSaveVersion < 180)
             {
                 Event<MDTower, RectangleTerrainArea2i>.Deserialize(reader);
    
             }
-            reader.SetField(this, "m_onMDAdded", Event<MDTower, EntityAddReason>.Deserialize(reader));
-            reader.SetField(this, "m_onMDRemoved", Event<MDTower, EntityRemoveReason>.Deserialize(reader));
+            reader.SetField<MDManager>(this, "m_onMDAdded", Event<MDTower, EntityAddReason>.Deserialize(reader));
+            reader.SetField<MDManager>(this, "m_onMDRemoved", Event<MDTower, EntityRemoveReason>.Deserialize(reader));
+
+            LogWrite.Info($"MD Manager deserialize {m_MDs.Count} towers");
         }
 
         static MDManager()

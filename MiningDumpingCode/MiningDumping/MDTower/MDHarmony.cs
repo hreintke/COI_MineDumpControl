@@ -39,13 +39,11 @@ namespace MiningDumpingMod
         static void Postfix(TowerAreasRenderer __instance)
         {
             LogWrite.Info($"TowerAreasRender rendererLoadState");
-            return;
-            IndexableEnumerator<MDTower> enumerator = _mdManager.MDs.GetEnumerator();
-            while (enumerator.MoveNext())
+            
+            foreach(MDTower mt in _mdManager.MDs)
             {
                 LogWrite.Info($"Adding MDTower");
-                IAreaManagingTower current = enumerator.Current;
-                typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, (new object[] { current }));
+                typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, (new object[] { mt }));
             }
             _mdManager.OnMDAdded.AddNonSaveable(__instance, delegate (MDTower tower, EntityAddReason reason)
             {
