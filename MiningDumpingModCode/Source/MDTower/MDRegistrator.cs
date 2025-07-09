@@ -48,8 +48,7 @@ namespace MiningDumpingMod
                  new LayoutEntityProto.Gfx("Assets/MiningDumpingMod/MDControlBuilding2.prefab",
                 customIconPath: "Assets/MiningDumpingMod/Building256.png",
 
-                categories: new ImmutableArray<ToolbarEntryData>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)))
-                ;
+                categories: new ImmutableArray<ToolbarEntryData>?(registrator.GetCategoriesProtos(Ids.ToolbarCategories.Buildings)));
 
             MDPrototype bp =
                 new MDPrototype(

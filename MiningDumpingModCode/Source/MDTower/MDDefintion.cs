@@ -38,13 +38,13 @@ namespace MiningDumpingMod
         public MDTower(EntityId id, MDPrototype proto, TileTransform transform, EntityContext context,
             TerrainDesignationsManager designationManager,
             MDManager mdManager,
-            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory,
-            TerrainRectSelection trs) : base(id, proto, transform, context)
+            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory) : base(id, proto, transform, context)
+ //           TerrainRectSelection trs) : base(id, proto, transform, context)
         {
             _proto = proto;
             minableArea = PolygonTerrainArea2i.FromRectArea(new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10).AddX(-5), new RelTile2i(10, 10)));
             _designationManager = designationManager;
-            terrainRectSelection = trs;
+//            terrainRectSelection = trs;
 
             _designationManager.DesignationAdded.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationAdded));
             _designationManager.DesignationRemoved.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationRemoved));
@@ -88,7 +88,7 @@ namespace MiningDumpingMod
         private readonly TowerAreasRenderer _towerAreasRenderer;
         private readonly MDManager _mdManager;
         public IEntityMaintenanceProvider _maintenance { get; private set; }
-        private TerrainRectSelection terrainRectSelection;
+//        private TerrainRectSelection terrainRectSelection;
 
         public PolygonTerrainArea2i Area { get { return minableArea; } }
         public int maxAreaSize = 150;
@@ -256,7 +256,7 @@ namespace MiningDumpingMod
 
         private void dumpTile(Tile2i txi)
         {
-            terrainRectSelection.SetArea(dumpDesignations[currentDesignationIndex].Area, UnityEngine.Color.green);
+ //           terrainRectSelection.SetArea(dumpDesignations[currentDesignationIndex].Area, UnityEngine.Color.green);
             ProductQuantity pq = tobeDumpedProducts.getSomeProduct(4.Quantity());
             if (pq == ProductQuantity.None)
             {
@@ -366,11 +366,11 @@ namespace MiningDumpingMod
         {
             if (isDumping || isMining)
             {
-                terrainRectSelection.Show();
+//                terrainRectSelection.Show();
             }
             else
             {
-                terrainRectSelection.Hide();
+//                terrainRectSelection.Hide();
             }
         }
 
@@ -491,7 +491,7 @@ namespace MiningDumpingMod
 
         public PartialQuantity mineTile(Tile2i txi)
         {
-            terrainRectSelection.SetArea(mineDesignations[mineDesignationIndex].Area, UnityEngine.Color.yellow);
+//            terrainRectSelection.SetArea(mineDesignations[mineDesignationIndex].Area, UnityEngine.Color.yellow);
             HeightTilesF requestedHeight = mineDesignations[mineDesignationIndex].GetTargetHeightAt(txi);
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
             HeightTilesF currentHeight = Context.TerrainManager.GetHeight(txi);
@@ -705,7 +705,7 @@ namespace MiningDumpingMod
         [InitAfterLoad(InitPriority.Normal)]
         private void initSelf(int saveVersion, DependencyResolver resolver)
         {
-            terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
+ //           terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
             if (saveVersion < 180)
                 minableArea = PolygonTerrainArea2i.FromRectArea(minableArea_old);
         }

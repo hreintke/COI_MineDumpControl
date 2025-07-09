@@ -30,6 +30,5 @@ namespace MiningDumpingMod
 
         public int maxAreaSize { get; set; }
         public int maxDistanceFromBuilding { get; set; }
-       
     }
 }

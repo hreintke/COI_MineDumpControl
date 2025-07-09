@@ -16,8 +16,12 @@ namespace MiningDumpingMod
     {
         public string Name => "MiningDumpingMod";
 
-        public int Version => 102;
- //       public static Version ModVersion = new Version(7, 3, 0);
+        public int Version => (typeof(CustomEntityMod).Assembly.GetName().Version.Major * 100) +
+                                (typeof(CustomEntityMod).Assembly.GetName().Version.Minor * 10) +
+                                (typeof(CustomEntityMod).Assembly.GetName().Version.Build);
+
+        public static Version ModVersion => typeof(CustomEntityMod).Assembly.GetName().Version;
+
         public bool IsUiOnly => false;
 
         public Option<IConfig> ModConfig { get; }
@@ -33,7 +37,7 @@ namespace MiningDumpingMod
 
         public void RegisterDependencies(DependencyResolverBuilder depBuilder, ProtosDb protosDb, bool gameWasLoaded)
         {
-            LogWrite.Info("Register Dependencies ");
+//            LogWrite.Info("Register Dependencies ");
         }
 
         public void RegisterPrototypes(ProtoRegistrator registrator)

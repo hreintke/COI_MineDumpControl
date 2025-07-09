@@ -1,0 +1,99 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<ModName>MiningDumpingMod</ModName>
+		<GamePath>$(APPDATA)\Captain of Industry</GamePath>
+		<GameModsPath>$(GamePath)\Mods</GameModsPath>
+		<ThisModsPath>$(GameModsPath)\$(ModName)</ThisModsPath>		
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<AssemblyName>$(ModName)</AssemblyName>
+		<Version>2.1.0-experimental</Version>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Configurations>Debug;Release</Configurations>
+		<WarningLevel>9999</WarningLevel>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<RootNamespace>$(ModName)</RootNamespace>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<DefineConstants>DEBUG</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>portable</DebugType>
+		<DefineConstants></DefineConstants>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).dll" />
+		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).pdb" />
+		<ModReleaseFiles Include="$(OutputPath)\0Harmony.dll" />
+	</ItemGroup>
+
+	<Target Name="CopyToModsPath" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="@(ModReleaseFiles)" DestinationFolder="$(ThisModsPath)" ContinueOnError="false">
+		</Copy>
+		<Message Text="Files Copied : @(ModReleaseFiles) to $(ThisModsPath)" Importance="High" />
+	</Target>
+
+	<Target Name="CreateReleaseZip" AfterTargets="CopyToModsPath" Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<Copy SourceFiles="@(ModReleaseFiles)" DestinationFolder="..\$(ModName)Release\ZipContent\$(ModName)" ContinueOnError="false">
+		</Copy>
+		
+		<ItemGroup>
+			<Assets Include="..\$(ModName)Assets\AssetBundles\**" />
+		</ItemGroup>
+		
+		<Copy SourceFiles="@(Assets)" DestinationFolder="..\$(ModName)Release\ZipContent\$(ModName)\AssetBundles" ContinueOnError="false">
+		</Copy>
+
+		<ZipDirectory SourceDirectory="..\$(ModName)Release\ZipContent" DestinationFile="..\$(ModName)Release\$(ModName)_$(Version).zip" Overwrite="true" />
+		<Message Text="Zipfile Created " Importance="High" />		
+	</Target>
+
+	<ItemGroup>
+	  <PackageReference Include="Lib.Harmony" Version="2.3.6" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="Mafi">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Mafi.Base">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.Base.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Mafi.Core">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.Core.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Mafi.ModsAuthoringSupport">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.ModsAuthoringSupport.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Mafi.Unity">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\Mafi.Unity.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.CoreModule">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.ParticleSystemModule">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.UI">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.UI.dll</HintPath>
+	  </Reference>
+	  <Reference Include="UnityEngine.UIElementsModule">
+	    <HintPath>..\..\..\..\..\Utilities\Steam\steamapps\common\Captain of Industry\Captain of Industry_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+</Project>
