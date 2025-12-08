@@ -45,7 +45,7 @@ public class MDInspector : BaseInspector<MDTower>
     ProductBufferUi dumpingBuffferUi = new ProductBufferUi().Margin(20).Height(25);
 
     Label miningBufferLabel = new Label("MiningBuffer".AsLoc()).FontSize(15).Margin(20);
-    Label dumpingBufferLabel = new Label("DumpinfBuffer".AsLoc()).FontSize(15).Margin(20);
+    Label dumpingBufferLabel = new Label("DumpingBuffer".AsLoc()).FontSize(15).Margin(20);
 
     Panel buttonPanel = new Panel();
 
@@ -134,11 +134,9 @@ public class MDInspector : BaseInspector<MDTower>
     protected override void OnActivated()
     {   
         base.OnActivated();
-        LogWrite.Info($"activating MD inspector {this.Entity.Id}");
         this.m_towerAreasRenderer.HighlightTowerArea((Option<IAreaManagingTower>)this.Entity);
         this.m_towerAreasAndDesignatorsActivator.ActivateIfNotActive();
         this.m_entityUnderEdit = Option<MDTower>.None;
-        LogWrite.Info($"activated  MD inspector {this.Entity.Id}");
     }
 
     protected override void OnDeactivated()
@@ -153,8 +151,7 @@ public class MDInspector : BaseInspector<MDTower>
     {
         if (!this.m_entityUnderEdit.HasValue)
             return;
-        this.ScheduleCommand<MineTowerAreaChangeCmd>(new MineTowerAreaChangeCmd(this.m_entityUnderEdit.Value.Id, newArea));
-        m_entityUnderEdit.Value.editMinableArea(newArea);
+        this.ScheduleCommand<MDAreaChangedCmd>(new MDAreaChangedCmd(this.m_entityUnderEdit.Value.Id, newArea));
     }
 
     private void deactivateEditing()

@@ -16,6 +16,8 @@ using Mafi.Core.Entities;
 using Mafi.Unity.Utils;
 using Mafi.Core.Terrain;
 using Mafi.Collections;
+using Mafi.Core.GameLoop;
+using Mafi.Core.Map;
 
 namespace MiningDumpingMod
 {
@@ -25,24 +27,39 @@ namespace MiningDumpingMod
     {
         private readonly Harmony harmony;
         static private MDManager _mdManager;
+        static private GameLoopEvents gameLoopEvents;
+        static bool hasRun = false;
 
-        modPatches(MDManager mdManager)
+        modPatches(MDManager mdManager, GameLoopEvents gle )
         {
-            harmony = new Harmony("myPatch");
+            LogWrite.Info($"ModPatches start");
+
+            harmony = new Harmony("MiningDumping");
+
+            if (Harmony.HasAnyPatches("MiningDumping")) 
+            {
+                LogWrite.Info($"Allready applied , removing MD harmony patches");
+                harmony.UnpatchAll("MiningDumping");
+            }
             harmony.PatchAll();
             LogWrite.Info("Harmony patches applied");
             _mdManager = mdManager;
+            gameLoopEvents = gle;
+            gameLoopEvents.Terminate.AddNonSaveable<modPatches>(this, terminateEvent);
+        }
+
+        void terminateEvent()
+        {
+            LogWrite.Info("Remove Harmony patches");
+            harmony.UnpatchAll("MiningDumping");
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(TowerAreasRenderer), "rendererLoadState")]
         static void Postfix(TowerAreasRenderer __instance)
         {
-            LogWrite.Info($"TowerAreasRender rendererLoadState");
-            
             foreach(MDTower mt in _mdManager.MDs)
             {
-                LogWrite.Info($"Adding MDTower");
                 typeof(TowerAreasRenderer).GetMethod("addTower", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, (new object[] { mt }));
             }
             _mdManager.OnMDAdded.AddNonSaveable(__instance, delegate (MDTower tower, EntityAddReason reason)
@@ -51,7 +68,6 @@ namespace MiningDumpingMod
                 LystStruct<IAreaManagingTower> towerAdded = (LystStruct<IAreaManagingTower>)fa.GetValue(__instance);
                 towerAdded.Add(tower);
                 fa.SetValue(__instance, towerAdded);
-                LogWrite.Info($"MDTower added {tower.Id}");
             });
             _mdManager.OnAreaChange.AddNonSaveable(__instance, delegate (MDTower tower, PolygonTerrainArea2i oldArea)
             {
@@ -59,7 +75,6 @@ namespace MiningDumpingMod
                 LystStruct<IAreaManagingTower> towerUpdated = (LystStruct<IAreaManagingTower>)fu.GetValue(__instance);
                 towerUpdated.Add(tower);
                 fu.SetValue(__instance, towerUpdated);
-                LogWrite.Info($"MDTower areachanged {tower.Id}");
             });
             _mdManager.OnMDRemoved.AddNonSaveable(__instance, delegate (MDTower tower, EntityRemoveReason reason)
             {
@@ -67,7 +82,6 @@ namespace MiningDumpingMod
                 LystStruct<IAreaManagingTower> towerRemoved = (LystStruct<IAreaManagingTower>)fr.GetValue(__instance);
                 towerRemoved.Add(tower);
                 fr.SetValue(__instance, towerRemoved);
-                LogWrite.Info($"MDTower removed {tower.Id}");
             });
 
         }

@@ -26,8 +26,6 @@ using Mafi.Core.Maintenance;
 using Mafi.Core.Vehicles.Jobs;
 using Mafi.Core.Terrain.Props;
 using UnityEngine;
-using Mafi.Unity.Terrain;
-using Mafi.Core.Terrain;
 
 namespace MiningDumpingMod
 {
