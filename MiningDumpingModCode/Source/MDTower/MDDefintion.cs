@@ -26,6 +26,7 @@ using Mafi.Core.Maintenance;
 using Mafi.Core.Vehicles.Jobs;
 using Mafi.Core.Terrain.Props;
 using UnityEngine;
+using Mafi.Core.Simulation;
 
 namespace MiningDumpingMod
 {
@@ -36,8 +37,9 @@ namespace MiningDumpingMod
         public MDTower(EntityId id, MDPrototype proto, TileTransform transform, EntityContext context,
             TerrainDesignationsManager designationManager,
             MDManager mdManager,
-            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory) : base(id, proto, transform, context)
- //           TerrainRectSelection trs) : base(id, proto, transform, context)
+            IEntityMaintenanceProvidersFactory maintenanceProvidersFactory,
+            Calendar cld) : base(id, proto, transform, context)
+
         {
             _proto = proto;
             minableArea = PolygonTerrainArea2i.FromRectArea(new RectangleTerrainArea2i(this.Position2f.Tile2i.AddY(10).AddX(-5), new RelTile2i(10, 10)));
@@ -48,11 +50,13 @@ namespace MiningDumpingMod
             _designationManager.DesignationRemoved.Add<MDTower>(this, new Action<TerrainDesignation>(this.designationRemoved));
             _mdManager = mdManager;
             _maintenance = maintenanceProvidersFactory.CreateFor(this);
+            calendar = cld;
+            cld.NewMonth.Add<MDTower>(this, onNewMonth);
 
             editMinableArea(minableArea);
          }
 
-        private int serializeVersion = 1; // real value will be set after deserialization;
+        private int serializeVersion = 2; // real value will be set after deserialization;
 
         public new MDPrototype Prototype
         {
@@ -75,24 +79,23 @@ namespace MiningDumpingMod
             Waiting,
             BufferIssue,
             NotEnoughWorkers,
+            Idle
         }
 
-        private readonly TerrainManager _terrainManager;
         private readonly ITerrainDesignationsManager _designationManager;
         private MDPrototype _proto;
         private PolygonTerrainArea2i minableArea;
         private RectangleTerrainArea2i minableArea_old;
-        private ProductsManager _productsManager;
-        private readonly TowerAreasRenderer _towerAreasRenderer;
         private readonly MDManager _mdManager;
+        private Calendar calendar;
         public IEntityMaintenanceProvider _maintenance { get; private set; }
-//        private TerrainRectSelection terrainRectSelection;
+
 
         public PolygonTerrainArea2i Area { get { return minableArea; } }
         public int maxAreaSize = 150;
 
-        private PartialProductsBuffer minedProducts = new PartialProductsBuffer(new PartialQuantity(100));
-        private PartialProductsBuffer tobeDumpedProducts = new PartialProductsBuffer(new PartialQuantity(100));
+        private PartialProductsBuffer minedProducts = new PartialProductsBuffer(new PartialQuantity(1000));
+        private PartialProductsBuffer tobeDumpedProducts = new PartialProductsBuffer(new PartialQuantity(1000));
 
         public IReadOnlySet<TerrainDesignation> ManagedDesignations { get => managedDesignations; }
         private readonly Set<TerrainDesignation> managedDesignations = new Set<TerrainDesignation>();
@@ -113,6 +116,20 @@ namespace MiningDumpingMod
         public Quantity dumpBufferMax => tobeDumpedProducts.maxQuantity.IntegerPart;
 
         private ProductQuantity sendInProgress = ProductQuantity.None;
+
+        public Lyst<ProductQuantity> getMixedProductList(bool mined)
+        {
+            return mined ? (Lyst < ProductQuantity > )minedProducts.getAllProducts() : tobeDumpedProducts.getAllProducts();
+        }
+
+        public void onNewMonth()
+        {
+            lastMonthDumped = thisMonthDumped;
+            thisMonthDumped = 0;
+            lastMonthMined = thisMonthMined;
+            thisMonthMined = 0;
+        }
+
         void IEntityWithSimUpdate.SimUpdate()
         {
             CurrentState = updateState();
@@ -298,11 +315,7 @@ namespace MiningDumpingMod
             }
             if ((!isMining) && (!isDumping))
             {
-                return State.Waiting;
-            }
-            if  (((minedProducts.IsFull) && (isMining)) || (((tobeDumpedProducts.IsEmpty) && (isDumping))))
-            {
-                return State.BufferIssue;
+                return State.Idle;
             }
             return State.Working;
         }
@@ -337,22 +350,28 @@ namespace MiningDumpingMod
             return this.Area.ContainsTile(designation.OriginTileCoord);
         }
 
-        Fix32 totalMined = 0;
-        Fix32 totalDumped = 0;
+        public Fix32 thisMonthMined = 0;
+        public Fix32 thisMonthDumped = 0;
+        public Fix32 lastMonthMined = 0;
+        public Fix32 lastMonthDumped = 0;
+
+        void registerMineDump(Fix32 quantity, bool mined)
+        {
+            if (mined)
+            {
+                thisMonthMined += quantity;
+            }
+            else
+            {
+                thisMonthDumped += quantity;
+            }
+        }
+
         public int simStepCount { get; private set; } = 10;
         private int mineIndex = 0;
         public int simStepCounter = 0;
-        public bool isMining { get; private set; } = false;
-        public bool isDumping { get; private set; } = false;
-
-        public Fix32 minedTotal
-        {
-            get { return totalMined; }
-        }
-        public Fix32 dumpedTotal
-        {
-            get { return totalDumped; }
-        }
+        public bool isMining { get; set; } = false;
+        public bool isDumping { get; set; } = false;
 
         public string bufferInfo()
         {
@@ -407,6 +426,7 @@ namespace MiningDumpingMod
         public string getLabelTxt()
         {
 
+#if false
             PartialProductQuantity ppq = tts.ToPartialProductQuantity(Context.TerrainManager);
             LystStruct<LooseProductQuantity> bp = minedProducts.FinalProductsReadonly();
             LystStruct<LooseProductQuantity>.Enumerator enumerator = minedProducts.FinalProductsReadonly().GetEnumerator();
@@ -417,12 +437,51 @@ namespace MiningDumpingMod
                 s = s + lpq.Product.ToString() + " " + lpq.Quantity.ToString() + "\n ";
             }
 
-            return $"area = {minableArea.ToString()}, mine = {mineIndex} \n" + s;
+            return $"area = {minableArea.ToString() , mine = {mineIndex} \n" + s;
+#endif
+            int df = 0;
+            foreach (var d in dumpDesignations)
+            {
+                if (d.IsDumpingFulfilled) { df++; };
+            }
+
+            int mf = 0;
+            foreach (var d in mineDesignations)
+            {
+                if (d.IsMiningFulfilled) { mf++; };
+                
+            }
+             
+            return $"Mine {mineDesignations.Count}, {mf}, {mineDesignationIndex}, {mineDesignationTileIndex} Dump {dumpDesignations.Count}, {df}, {currentDesignationIndex}, {currentDesignationTileIndex} mining {isMining} dumping {isDumping} ";
          }
 
-        public void buttonAction()
+        
+
+        public string getDesignationInfo(bool mining)
         {
-            mineCurrentTile();
+            int available = 0;
+            int count = 0;
+            if (mining)
+            {
+                int mf = 0;
+                foreach (var d in mineDesignations)
+                {
+                    if (!d.IsMiningFulfilled) { mf++; }
+                }
+                count = mineDesignations.Count;
+                available = mf;
+            }
+            else
+            {
+                int df = 0;
+                foreach (var d in dumpDesignations)
+                {
+                    if (!d.IsDumpingFulfilled) { df++; }
+                }
+                count = dumpDesignations.Count;
+                available = df;
+            }
+            return $"Designations Count : {count} Availabe : {available}";
         }
 
 
@@ -496,7 +555,7 @@ namespace MiningDumpingMod
             
             tts = Context.TerrainManager.MineMaterial(txi.ExtendIndex(Context.TerrainManager), currentHeight - requestedHeight);
             Context.TerrainManager.DisruptExactly(txia , currentHeight - requestedHeight);
-            totalMined += tts.ToPartialProductQuantity(Context.TerrainManager).Quantity.Value;
+            registerMineDump(tts.ToPartialProductQuantity(Context.TerrainManager).Quantity.Value, true);
             minedProducts.AddProduct(tts.ToPartialProductQuantity(Context.TerrainManager));
             return tts.ToPartialProductQuantity(Context.TerrainManager).Quantity;
         }
@@ -562,8 +621,8 @@ namespace MiningDumpingMod
         public string statusInfo()
         {
             string s = (isMining) ? "Mining" : (isDumping) ? "Dumping" : "Idle";
-            string m = "MineInfo : " + "Total " + totalMined + " Buffer : " + minedProducts.ToString() + $" mCnt = {mineDesignations.Count} ";
-            string d = "DumpInfo : " + "Total " + totalDumped + " Buffer : " + tobeDumpedProducts.ToString() + $" dCnt = {dumpDesignations.Count} ";
+            string m = "MineInfo : " + "Total "  + " Buffer : " + minedProducts.ToString() + $" mCnt = {mineDesignations.Count} ";
+            string d = "DumpInfo : " + "Total " + " Buffer : " + tobeDumpedProducts.ToString() + $" dCnt = {dumpDesignations.Count} ";
             return s + "\n" + m + "\n" + d; 
         } 
         
@@ -612,6 +671,7 @@ namespace MiningDumpingMod
         
         protected override void SerializeData(BlobWriter writer)
         {
+            serializeVersion = 2; // needs to be set here hardcoded
             base.SerializeData(writer);
             writer.WriteInt(serializeVersion);
             writer.WriteGeneric(_proto);
@@ -623,8 +683,6 @@ namespace MiningDumpingMod
             PartialProductsBuffer.Serialize(minedProducts, writer);
             ProductQuantity.Serialize(sendInProgress, writer);
             PartialProductsBuffer.Serialize(tobeDumpedProducts, writer);
-            Fix32.Serialize(totalDumped, writer);
-            Fix32.Serialize(totalMined, writer);
             writer.WriteGeneric<ITerrainDesignationsManager>(_designationManager);
             Set<TerrainDesignation>.Serialize(this.managedDesignations, writer);
             LystStruct<TerrainDesignation>.Serialize(this.mineDesignations, writer);
@@ -633,6 +691,11 @@ namespace MiningDumpingMod
             writer.WriteGeneric<IEntityMaintenanceProvider>(_maintenance);
             writer.WriteInt(mineDesignationIndex);
             writer.WriteInt(currentDesignationIndex);
+            Fix32.Serialize(thisMonthDumped, writer);
+            Fix32.Serialize(lastMonthDumped, writer);
+            Fix32.Serialize(thisMonthMined, writer);
+            Fix32.Serialize(lastMonthMined, writer);
+            writer.WriteGeneric<Calendar>(calendar);
         }
 
         public static MDTower Deserialize(BlobReader reader)
@@ -672,9 +735,10 @@ namespace MiningDumpingMod
 
         protected override void DeserializeData(BlobReader reader)
         {
-            LogWrite.Info("Deserializing");
+
             base.DeserializeData(reader);
             int sVersion = reader.ReadInt();
+            LogWrite.Info($"Deserializing save {sVersion} new {serializeVersion}");
             reader.SetField(this, "_proto", reader.ReadGenericAs<MDPrototype>());
             reader.SetField(this, "mineIndex", reader.ReadInt());
             reader.SetProperty(this, "isMining", reader.ReadBool());
@@ -686,8 +750,11 @@ namespace MiningDumpingMod
             minedProducts = PartialProductsBuffer.Deserialize(reader);
             sendInProgress = ProductQuantity.Deserialize(reader);
             tobeDumpedProducts = PartialProductsBuffer.Deserialize(reader);
-            totalDumped = Fix32.Deserialize(reader);
-            totalMined = Fix32.Deserialize(reader);
+            if (sVersion < 2)
+            {
+                Fix32 totalDumped = Fix32.Deserialize(reader);
+                Fix32 totalMined = Fix32.Deserialize(reader);
+            }
             reader.SetField<MDTower>(this, "_designationManager", (object)reader.ReadGenericAs<ITerrainDesignationsManager>());
             reader.SetField<MDTower>(this, "managedDesignations", (object)Set<TerrainDesignation>.Deserialize(reader));
             mineDesignations = LystStruct<TerrainDesignation>.Deserialize(reader);
@@ -697,15 +764,38 @@ namespace MiningDumpingMod
             reader.SetField(this, "mineDesignationIndex", reader.ReadInt());
             reader.SetField(this, "currentDesignationIndex", reader.ReadInt());
             maxAreaSize = _proto.maxAreaSize;
+            if (sVersion > 1)
+            {
+                thisMonthDumped = Fix32.Deserialize(reader);
+                lastMonthDumped = Fix32.Deserialize(reader);
+                thisMonthMined = Fix32.Deserialize(reader);
+                lastMonthMined = Fix32.Deserialize(reader);
+                calendar = reader.ReadGenericAs<Calendar>();
+            }
+            else
+            {
+                thisMonthDumped = lastMonthDumped = thisMonthMined = lastMonthMined = 0; 
+            }
             reader.RegisterInitAfterLoad<MDTower>(this, "initSelf", InitPriority.Normal);
         }
 
         [InitAfterLoad(InitPriority.Normal)]
         private void initSelf(int saveVersion, DependencyResolver resolver)
         {
- //           terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
+            //           terrainRectSelection = resolver.Instantiate<TerrainRectSelection>();
             if (saveVersion < 180)
                 minableArea = PolygonTerrainArea2i.FromRectArea(minableArea_old);
+            //calendar.NewMonth.Add<MDTower>(this, onNewMonth);
+            Option<Calendar> c = resolver.GetResolvedInstance<Calendar>();
+            if (!c.HasValue)
+            {
+                LogWrite.Info("No calendar resolved");
+            }
+            else
+            {
+                calendar = c.Value;
+                c.Value.NewMonth.AddNonSaveable<MDTower>(this, onNewMonth);
+            }
         }
 
         static MDTower()

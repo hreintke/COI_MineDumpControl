@@ -107,6 +107,20 @@ namespace MiningDumpingMod
             return finalProducts;
         }
 
+        public Lyst<ProductQuantity> getAllProducts()
+        {
+            Lyst<ProductQuantity> productList = new Lyst<ProductQuantity>();
+
+            foreach (var x in FinalProductsReadonly())
+            {
+                if (x.Quantity > Quantity.Zero)
+                {
+                    productList.Add(new ProductQuantity(x.Product, x.Quantity));
+                }
+            }
+            return productList;
+        }
+
         public ProductQuantity getSomeProduct(Quantity q)
         {
             ProductQuantity returnQuantity = ProductQuantity.None;
