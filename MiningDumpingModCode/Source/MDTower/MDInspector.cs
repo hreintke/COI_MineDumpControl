@@ -45,23 +45,6 @@ public class MDInspector : BaseInspector<MDTower>
     public bool AreaEditInProgress;
     private Option<MDTower> m_entityUnderEdit;
 
-
-    Row buttonRow = new Row().Gap(5).Margin(20);
-
-    private readonly AbstractRecipeUi mineRecipeUi;
-    private readonly AbstractRecipeUi dumpRecipeUi;
-    private readonly RecipePicker recipePickerUi;
-
-    Lyst<RecipeProto> recipesAssigned;
-    Lyst<RecipeProto> allRecipes;
-
-    Label debugLabel = new Label("Debug".AsLoc()).FontSize(15).Margin(20);
-    int debugCounter = 0;
-
-    Panel buttonPanel = new Panel();
-    BufferWithMultipleProductsUi inputBuffer = new BufferWithMultipleProductsUi();
-    BufferWithMultipleProductsUi outputBuffer = new BufferWithMultipleProductsUi();
-
     public MDInspector(
       UiContext context,
       TowerAreasRenderer towerAreasRenderer,
@@ -81,90 +64,7 @@ public class MDInspector : BaseInspector<MDTower>
             .Tooltip<ButtonIcon>(new LocStrFormatted?((LocStrFormatted)Tr.FocusManagedAreaTooltip)));
         StatusRow.Add(selectRow.AbsolutePosition(new Px?()));
 
-        PanelFooterRow panelFooterRow = new PanelFooterRow();
 
-        Display desigAvailCount = new Display().MinDigits(4);
-        Display thisMonth = new Display().MinDigits(4);
-        Display lastMonth = new Display().MinDigits(4);
-
-        desigAvailCount.Value("0".AsLoc());
-        thisMonth.Value("0".AsLoc()).ObserveValue((Func<LocStrFormatted>)(() => this.Entity.thisMonthMined.IntegerPart.ToString().AsLoc()));
-        lastMonth.Value("0".AsLoc()).ObserveValue((Func<LocStrFormatted>)(() => this.Entity.lastMonthMined.IntegerPart.ToString().AsLoc())); 
-
-        Label desigLabel = new Label("Available Designations : ".AsLoc()).MarginLeftRight(2.px());
-        Label mineLabel = new Label("Mined this/last month : ".AsLoc()).MarginLeftRight(2.px());
-        Label slashLabel = new Label("/".AsLoc()).MarginLeftRight(1.px());
-
-        Toggle enable =
-             new Toggle(true).Label<Toggle>("Enabled".AsLoc())
-                             .Tooltip<Toggle>("Only one of Mining or Dumping is allowed".AsLoc())
-                             .OnValueChanged((Action<bool>)(isOn =>
-                                {
-                                    if (isOn)
-                                    {
-                                        Entity.isMining = true;
-                                        Entity.isDumping = false;
-                                    }
-                                    else
-                                    {
-                                        Entity.isMining = false;
-                                    }
-                                }))
-                             .ObserveValue<Toggle>((Func<bool>)(() => this.Entity.isMining));
-        Row desigInfo = new Row(1.px());
-        desigInfo.Add(desigLabel, desigAvailCount);
-
-        Row mineInfo = new Row(1.px());
-        mineInfo.Add(mineLabel, thisMonth, slashLabel, lastMonth);
-
-        panelFooterRow.BodyAdd(desigInfo.AbsolutePosition(new Px?(), new Px?(), new Px?(), new Px?()).TextAlign(TextAlignment.CenterMiddle));
-        panelFooterRow.BodyAdd(mineInfo.AbsolutePosition(new Px?(), new Px?(), new Px?(), 352.px()).TextCenterMiddle());
-        panelFooterRow.Body.Height(31.px());
-
-     //   PanelWithHeader minePanel = this.AddPanelWithHeader(inputBuffer, panelFooterRow).Title("Mining Status".AsLoc());
-
-     //   minePanel.TitleRow.Add(enable.AbsolutePosition(new Px?(), new Px?(), new Px?(), 245));
-     //   minePanel.Collapsed(false);
-
-        this.ObserveIndexable<ProductQuantity>((Func<IIndexable<ProductQuantity>>)(() => this.Entity.getMixedProductList(true)))
-            .Observe<Quantity>((Func<Quantity>)(() => this.Entity.mineBufferMax)).Do((Action<Lyst<ProductQuantity>, Quantity>)((cargo, capacity) =>
-        {
-            inputBuffer.SetProducts(cargo, capacity);
-        }));
-
-        Label lo = new Label().ObserveValue<Label>((Func<LocStrFormatted>)(() => this.Entity.getDesignationInfo(false).AsLoc()));
-
-        PanelFooterRow pfro = new PanelFooterRow()
-            .BodyAdd((Action<Row>)(c => c.JustifyItemsEnd<Row>()),
-            lo,
-                    (UiComponent)new Toggle(true).Label<Toggle>("Dumping enabled".AsLoc())
-                                .Tooltip<Toggle>("Only one of Mining or Dumping is allowed".AsLoc())
-                                .OnValueChanged((Action<bool>)(isOn =>
-                                {
-                                    if (isOn)
-                                    {
-                                        Entity.isDumping = true;
-                                        Entity.isMining = false;
-                                    }
-                                    else
-                                    {
-                                        Entity.isDumping = false;
-                                    }
-                                }))
-                                .ObserveValue<Toggle>((Func<bool>)(() => this.Entity.isDumping)));
-
-     
-       // PanelWithHeader dph =   this.AddPanelWithHeader(outputBuffer, pfro).Title("Dumping info".AsLoc());
-
-   
-
-        this.ObserveIndexable<ProductQuantity>((Func<IIndexable<ProductQuantity>>)(() => this.Entity.getMixedProductList(false)))
-            .Observe<Quantity>((Func<Quantity>)(() => this.Entity.dumpBufferMax)).Do((Action<Lyst<ProductQuantity>, Quantity>)((cargo, capacity) =>
-            {
-                outputBuffer.SetProducts(cargo, capacity);
-            }));
-
-        buttonPanel.Add(debugLabel);
         this.Observe<MDTower.State>((Func<MDTower.State>)(() => this.Entity.CurrentState)).Do((Action<MDTower.State>)(state =>
         {
             switch (state)
@@ -187,9 +87,6 @@ public class MDInspector : BaseInspector<MDTower>
             }
         }));
 
-       this.Observe<int>((Func<int>)(() => debugCounter++)).Do(i => { debugLabel.Value(this.Entity.getLabelTxt().AsLoc()); });
-
-
         Action<bool> mineEnable = (Action<bool>)(isOn =>
         {
             if (isOn)
@@ -208,6 +105,7 @@ public class MDInspector : BaseInspector<MDTower>
             "  Mined",
             (Func<Fix32>)(() => Entity.thisMonthMined),
             (Func<Fix32>)(() => Entity.lastMonthMined),
+            (Func<int>)(() => Entity.getDesignationCount(true)),
             (Func<IIndexable<ProductQuantity>>)(() =>
               {
                   return this.Entity.getMixedProductList(true);
@@ -227,41 +125,38 @@ public class MDInspector : BaseInspector<MDTower>
                 }
             }),
             (Func<bool>)(() => Entity.isMining)
-
             );
 
-        buttonPanel.Add(mdp);
+        this.Body.Add(mdp);
+
 
         MDInfoPanel ddp = new MDInfoPanel(Entity,
-    "Dumping Information",
-    "Dumped",
-    (Func<Fix32>)(() => Entity.thisMonthDumped),
-    (Func<Fix32>)(() => Entity.lastMonthDumped),
-    (Func<IIndexable<ProductQuantity>>)(() =>
-    {
-        return this.Entity.getMixedProductList(false);
-    })
-      ,
-    (Func<Quantity>)(() => this.Entity.dumpBufferMax),
-    (Action<bool>)(isOn =>
-    {
-        if (isOn)
-        {
-            Entity.isDumping = true;
-            Entity.isMining = false;
-        }
-        else
-        {
-            Entity.isDumping = false;
-        }
-    }),
-    (Func<bool>)(() => Entity.isDumping)
-
-    );
-        buttonPanel.Add(ddp);
-
-        this.Body.Add(buttonPanel);
-
+            "Dumping Information",
+            "Dumped",
+            (Func<Fix32>)(() => Entity.thisMonthDumped),
+            (Func<Fix32>)(() => Entity.lastMonthDumped),
+            (Func<int>)(() => Entity.getDesignationCount(false)),
+            (Func<IIndexable<ProductQuantity>>)(() =>
+            {
+                return this.Entity.getMixedProductList(false);
+            }),
+            (Func<Quantity>)(() => this.Entity.dumpBufferMax),
+            (Action<bool>)(isOn =>
+            {
+                if (isOn)
+                {
+                    Entity.isDumping = true;
+                    Entity.isMining = false;
+                }
+                else
+                {
+                    Entity.isDumping = false;
+                }
+            }),
+            (Func<bool>)(() => Entity.isDumping)
+            );
+        
+        this.Body.Add(ddp);
     }
 
     protected override void OnActivated()

@@ -279,12 +279,6 @@ namespace MiningDumpingMod
             }
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
             ThicknessTilesF thickness = pq.Product.DumpableProduct.Value.TerrainMaterial.Value.QuantityToThickness(pq.Quantity);
-#if false
-            Context.TerrainManager.DumpMaterial(txia,
-                new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, thickness));
-            Context.ProductsManager.ClearProduct(pq);
-            totalDumped += pq.Quantity.Value;
-#endif      
             HeightTilesF requestedHeight = dumpDesignations[currentDesignationIndex].GetTargetHeightAt(txi);
             ThicknessTilesF notUsedThickness = Context.TerrainManager.DumpMaterialUpToHeight(txia,
                 new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, thickness), requestedHeight);
@@ -297,9 +291,6 @@ namespace MiningDumpingMod
             if ((CurrentState == State.Working) || (CurrentState == State.BufferIssue))
             {
                 dumpCurrentTile();
-//                dumpCurrentTile();
-//                dumpCurrentTile();
-//                dumpCurrentTile();
             }
         }
 
@@ -453,11 +444,11 @@ namespace MiningDumpingMod
             }
              
             return $"Mine {mineDesignations.Count}, {mf}, {mineDesignationIndex}, {mineDesignationTileIndex} Dump {dumpDesignations.Count}, {df}, {currentDesignationIndex}, {currentDesignationTileIndex} mining {isMining} dumping {isDumping} ";
-         }
+        }
 
         
 
-        public string getDesignationInfo(bool mining)
+        public int getDesignationCount(bool mining)
         {
             int available = 0;
             int count = 0;
@@ -470,6 +461,7 @@ namespace MiningDumpingMod
                 }
                 count = mineDesignations.Count;
                 available = mf;
+                return mf;
             }
             else
             {
@@ -480,8 +472,9 @@ namespace MiningDumpingMod
                 }
                 count = dumpDesignations.Count;
                 available = df;
+                return df;
             }
-            return $"Designations Count : {count} Availabe : {available}";
+            //return $"Designations Count : {count} Availabe : {available}";
         }
 
 

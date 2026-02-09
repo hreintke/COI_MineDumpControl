@@ -34,6 +34,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Source\MDTower\MDInfoPanelOLd.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).dll" />
 		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).pdb" />
 		<ModReleaseFiles Include="$(OutputPath)\0Harmony.dll" />
