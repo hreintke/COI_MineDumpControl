@@ -8,7 +8,7 @@
 	
 	<PropertyGroup>
 		<AssemblyName>$(ModName)</AssemblyName>
-		<Version>3.1.1</Version>
+		<Version>4.1.1</Version>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
 		<LangVersion>latest</LangVersion>
