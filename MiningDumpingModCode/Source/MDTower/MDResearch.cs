@@ -24,10 +24,10 @@ namespace MiningDumpingMod
         public void RegisterData(ProtoRegistrator registrator)
         {
             registrator.ResearchNodeProtoBuilder
-                .Start("MD Control Tower", PrototypeIDs.Research.UnlockMDTower,5, "MD Control Tower")
+                .Start("MD Control Tower", PrototypeIDs.Research.UnlockMDTower, 100, "MD Control Tower")
                 .Description("MD Control Tower")
                 .AddLayoutEntityToUnlock(PrototypeIDs.LocalEntities.MDTowerID)
-                .SetGridPosition(registrator.PrototypesDb.GetOrThrow<ResearchNodeProto>(Ids.Research.FarmingT4).GridPosition + new Vector2i(0,4))
+                .SetGridPosition(new Vector2i(120,20))
                 .AddParents(registrator.PrototypesDb.GetOrThrow<ResearchNodeProto>(Ids.Research.VehicleAssembly3),
                             registrator.PrototypesDb.GetOrThrow<ResearchNodeProto>(Ids.Research.GlassSmeltingT2))
                 .BuildAndAdd();

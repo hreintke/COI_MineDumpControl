@@ -14,6 +14,12 @@ namespace MiningDumpingMod
 {
     public sealed class CustomEntityMod : IMod
     {
+        public CustomEntityMod(ModManifest modManifest) 
+        {
+            manifest = modManifest;
+        }
+
+        ModManifest manifest;
         public string Name => "MiningDumpingMod";
 
         public int Version => (typeof(CustomEntityMod).Assembly.GetName().Version.Major * 100) +
@@ -25,6 +31,10 @@ namespace MiningDumpingMod
         public bool IsUiOnly => false;
 
         public Option<IConfig> ModConfig { get; }
+
+        public ModManifest Manifest => manifest;
+
+        public ModJsonConfig JsonConfig => new ModJsonConfig(this);
 
         public void ChangeConfigs(Lyst<IConfig> configs)
         {
@@ -50,6 +60,16 @@ namespace MiningDumpingMod
 
         public void EarlyInit(DependencyResolver resolver)
         {
+        }
+
+        public void MigrateJsonConfig(VersionSlim savedVersion, Dict<string, object> savedValues)
+        {
+            
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

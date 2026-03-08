@@ -8,7 +8,7 @@
 	
 	<PropertyGroup>
 		<AssemblyName>$(ModName)</AssemblyName>
-		<Version>3.2.1</Version>
+		<Version>4.1.2</Version>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
 		<LangVersion>latest</LangVersion>
@@ -41,6 +41,8 @@
 		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).dll" />
 		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).pdb" />
 		<ModReleaseFiles Include="$(OutputPath)\0Harmony.dll" />
+		<ModReleaseFiles Include="manifest.json" />
+		
 	</ItemGroup>
 
 	<Target Name="CopyToModsPath" AfterTargets="PostBuildEvent">

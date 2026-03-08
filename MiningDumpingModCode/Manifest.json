@@ -1,0 +1,17 @@
+{
+  "id": "MiningDumping",
+  "version": "4.1.2",
+  "display_name": "Mining Dumping Tower",
+  "description_short": "Adds Tower which can mine/dump without the use of trucks",
+  "description_long": "Adds Tower which can mine/dump without the use of trucks",
+  "authors": [ "hreintke" ],
+  "primary_dlls": [ "0Harmony.dll", "MiningDumpingMod.dll" ],
+  "min_game_version": "0.8.0",
+  "max_verified_game_version": "0.8.0",
+  "mod_dependencies": [],
+  "optional_mod_dependencies": [],
+  "incompatible_mods": [],
+  "non_locking_dll_load": true,
+  "can_add_to_saved_game": true,
+  "can_remove_from_saved_game": true
+}
