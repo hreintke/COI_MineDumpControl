@@ -284,6 +284,7 @@ namespace MiningDumpingMod
                 new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, thickness), requestedHeight);
             PartialProductQuantity notUsedPartialQuantity = (new TerrainMaterialThicknessSlim(pq.Product.DumpableProduct.Value.TerrainMaterial.Value.SlimId, notUsedThickness)).ToPartialProductQuantity(Context.TerrainManager);
             tobeDumpedProducts.AddProduct(notUsedPartialQuantity);
+            registerMineDump((pq.Quantity.Value).ToFix32() - notUsedPartialQuantity.Quantity.Value, false);
         }
 
         private void tryDumping()
