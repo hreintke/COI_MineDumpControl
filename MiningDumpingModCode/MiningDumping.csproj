@@ -8,7 +8,7 @@
 	
 	<PropertyGroup>
 		<AssemblyName>$(ModName)</AssemblyName>
-		<Version>4.1.6</Version>
+		<Version>4.1.7</Version>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
 		<LangVersion>latest</LangVersion>
@@ -42,6 +42,7 @@
 		<ModReleaseFiles Include="$(OutputPath)\$(AssemblyName).pdb" />
 		<ModReleaseFiles Include="$(OutputPath)\0Harmony.dll" />
 		<ModReleaseFiles Include="manifest.json" />
+		<ModReleaseFiles Include="Thumbnail.png" />
 		
 	</ItemGroup>
 

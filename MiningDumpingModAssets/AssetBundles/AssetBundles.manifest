@@ -1,15 +1,12 @@
 ManifestFileVersion: 0
 UnityVersion: 6000.0.50f1
-CRC: 3123530990
+CRC: 4292344067
 HashAppended: 0
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: mdcontrolbuildingcollider_3701
-      Dependencies: {}
-    Info_1:
       Name: mdcontrolbuilding2_67ed
       Dependencies: {}
-    Info_2:
+    Info_1:
       Name: miningdumpingmod_f337
       Dependencies: {}
