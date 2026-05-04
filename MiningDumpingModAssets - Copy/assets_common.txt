@@ -1,0 +1,9 @@
+miningdumpingmod_f337
+    Assets/MiningDumpingMod/Building256.png
+
+mdcontrolbuilding2_67ed
+    Assets/MiningDumpingMod/MDControlBuilding2.prefab
+
+mdcontrolbuildingcollider_3701
+    Assets/MiningDumpingMod/MDControlBuildingCollider.prefab
+

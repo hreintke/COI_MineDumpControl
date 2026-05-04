@@ -38,16 +38,16 @@ public class MDInfoPanel : PanelWithHeader
 
 
     public MDInfoPanel(
-    MDTower mdTower,
-    string panelHeaderTxt,
-    string mdLabel,
-    Func<Fix32> thisMonthQuantity,
-    Func<Fix32> lastMonthQuantity,
-    Func<int> availableDesignators,
-    Func<IIndexable<ProductQuantity>> bufferProductQuantity,
-    Func<Quantity> maxBuffer,
-    Action<bool> enableAction,
-    Func<bool> checkStatus)
+        MDTower mdTower,
+        string panelHeaderTxt,
+        string mdLabel,
+        Func<Fix32> thisMonthQuantity,
+        Func<Fix32> lastMonthQuantity,
+        Func<int> availableDesignators,
+        Func<IIndexable<ProductQuantity>> bufferProductQuantity,
+        Func<Quantity> maxBuffer,
+        Action<bool> enableAction,
+        Func<bool> checkStatus)
     {
         mineDumpLabel= new Label((mdLabel + " this/last month : ").AsLoc()).MarginLeftRight(2.px());
         enable = new Toggle(true).Label<Toggle>("Enabled".AsLoc())
@@ -56,8 +56,8 @@ public class MDInfoPanel : PanelWithHeader
                              .ObserveValue<Toggle>(checkStatus);
 
         desigAvailCount.Value("0".AsLoc());
-        thisMonth.Value("0".AsLoc()).ObserveValue((Func<LocStrFormatted>)(() => thisMonthQuantity().IntegerPart.ToString().AsLoc()));
-        lastMonth.Value("0".AsLoc()).ObserveValue((Func<LocStrFormatted>)(() => lastMonthQuantity().IntegerPart.ToString().AsLoc()));
+        thisMonth.Value("0".AsLoc());//.ObserveValue((Func<LocStrFormatted>)(() => thisMonthQuantity().IntegerPart.ToString().AsLoc()));
+        lastMonth.Value("0".AsLoc());//.ObserveValue((Func<LocStrFormatted>)(() => lastMonthQuantity().IntegerPart.ToString().AsLoc()));
 
 
         Row desigInfo = new Row(1.px());

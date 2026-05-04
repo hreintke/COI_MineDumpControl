@@ -8,7 +8,7 @@
 	
 	<PropertyGroup>
 		<AssemblyName>$(ModName)</AssemblyName>
-		<Version>4.1.6</Version>
+		<Version>4.1.7</Version>
 		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
 		<LangVersion>latest</LangVersion>
@@ -69,6 +69,40 @@
 	<ItemGroup>
 	  <PackageReference Include="Lib.Harmony" Version="2.3.6" />
 	</ItemGroup>
+
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);AutoTerrainDesignations_include</DefineConstants>
+		<_ATD_Include>true</_ATD_Include>
+	</PropertyGroup>
+
+
+	<PropertyGroup Condition="Exists('..\AutoTerrainDesignations\AutoTerrainDesignations.dll')">
+		<DefineConstants>$(DefineConstants);AutoTerrainDesignations_available</DefineConstants>
+		<_ATD_Available>true</_ATD_Available>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(_ATD_Available)' == 'true' and '$(_ATD_Include)' == 'true'">
+		<DefineConstants>$(DefineConstants);AutoTerrainDesignations_enabled</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="Exists('..\AutoTerrainDesignations\AutoTerrainDesignations.dll')">
+		<DefineConstants>$(DefineConstants);AutoTerrainDesignations_available</DefineConstants>
+		<_ATD_Available>true</_ATD_Available>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(_ATD_Available)' == 'true' and '$(_ATD_Include)' == 'true'">
+		<DefineConstants>$(DefineConstants);AutoTerrainDesignations_enabled</DefineConstants>
+	</PropertyGroup>
+	
+
+	<ItemGroup Condition="Exists('..\AutoTerrainDesignations\AutoTerrainDesignations.dll')">
+		<Reference Include="AutoTerrainDesignations">
+			<HintPath>..\AutoTerrainDesignations\AutoTerrainDesignations.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+	
+	
 
 	<ItemGroup>
 	  <Reference Include="Mafi">

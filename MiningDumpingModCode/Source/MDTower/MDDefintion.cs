@@ -1,38 +1,40 @@
-﻿using Mafi.Core.Entities;
+﻿using Mafi;
+using Mafi.Collections;
+using Mafi.Collections.ImmutableCollections;
 using Mafi.Core;
-using Mafi.Serialization;
-using System;
-using System.Linq;
+using Mafi.Core.Buildings.Forestry;
+using Mafi.Core.Buildings.FuelStations;
+using Mafi.Core.Buildings.Mine;
+using Mafi.Core.Buildings.Towers;
+using Mafi.Core.Entities;
 using Mafi.Core.Entities.Static.Layout;
-using Mafi;
+using Mafi.Core.Factory.Recipes;
+using Mafi.Core.Maintenance;
 using Mafi.Core.Population;
 using Mafi.Core.Ports;
 using Mafi.Core.Ports.Io;
-using Mafi.Core.Terrain;
-using Mafi.Collections;
 using Mafi.Core.Products;
-using System.Xml.Serialization;
-using Mafi.Core.Buildings.Towers;
-using Mafi.Core.Terrain.Designation;
-using Mafi.Core.Buildings.FuelStations;
-using Mafi.Core.Buildings.Mine;
-using System.Collections.Generic;
-using Mafi.Core.Buildings.Forestry;
-using Mafi.Vornoi;
-using Mafi.Unity.Mine;
-using System.Reflection;
-using Mafi.Unity.Utils;
-using Mafi.Core.Maintenance;
-using Mafi.Core.Vehicles.Jobs;
-using Mafi.Core.Terrain.Props;
-using UnityEngine;
 using Mafi.Core.Simulation;
+using Mafi.Core.Terrain;
+using Mafi.Core.Terrain.Designation;
+using Mafi.Core.Terrain.Props;
+using Mafi.Core.Vehicles.Jobs;
+using Mafi.Serialization;
+using Mafi.Unity.Mine;
+using Mafi.Unity.Utils;
+using Mafi.Vornoi;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Xml.Serialization;
+using UnityEngine;
 
 namespace MiningDumpingMod
 {
 
     [GenerateSerializer(false, null, 0)]
-    public class MDTower : LayoutEntity, IEntityWithWorkers, IEntityWithSimUpdate, IEntityWithPorts, IAreaManagingTower, IMaintainedEntity
+    public class MDTower : LayoutEntity, IEntityWithWorkers, IEntityWithSimUpdate, IEntityWithPorts, IAreaManagingTower, IMaintainedEntity, IEntityWithCloneableConfig
     {
         public MDTower(EntityId id, MDPrototype proto, TileTransform transform, EntityContext context,
             TerrainDesignationsManager designationManager,
@@ -124,6 +126,7 @@ namespace MiningDumpingMod
 
         public void onNewMonth()
         {
+//            LogWrite.Info($"Month : {this.Id} thisMonthDumped {thisMonthDumped} ");
             lastMonthDumped = thisMonthDumped;
             thisMonthDumped = 0;
             lastMonthMined = thisMonthMined;
@@ -143,6 +146,28 @@ namespace MiningDumpingMod
                 tryDumping();
             }
         }
+
+        public virtual void AddToConfig(EntityConfigData data)
+        {
+            LogWrite.Info("AddToConfig");
+            data.Set<PolygonTerrainArea2i>("Area", Area, PolygonTerrainArea2i.Serialize);
+            data.SetBool("isMining", isMining);
+            data.SetBool("isDumping", isDumping);
+        }
+        public virtual void ApplyConfig(EntityConfigData data)
+        {
+            LogWrite.Info($"Apply config {data.Prototype.Value.Id}");
+            //        
+            var a = data.Get<PolygonTerrainArea2i>("Area", PolygonTerrainArea2i.Deserialize);
+            if (a.HasValue)
+            {
+                editMinableArea(a.Value);
+            }
+
+            isMining = data.GetBool("isMining") ?? false;
+            isDumping = data.GetBool("isDumping") ?? false;
+         }
+
 
         private void tryMining()
         {

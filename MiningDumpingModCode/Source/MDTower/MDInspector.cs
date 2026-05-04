@@ -31,9 +31,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using AutoTerrainDesignations;
 
 namespace MiningDumpingMod;
 
@@ -100,6 +103,18 @@ public class MDInspector : BaseInspector<MDTower>
             }
         });
 
+        
+#if AutoTerrainDesignations_enabled
+        if (CustomEntityMod.ATD_Available)
+        {
+            PanelWithHeader bdp = ATDBridge.BuildDesignationPanel(() => { return this.Entity; }, this);
+            bdp.Collapsed(true);
+            this.Body.Add(bdp);
+            PanelWithHeader bop = ATDBridge.BuildOreCompositionPanel(() => { return this.Entity; }, this);
+            bop.Collapsed(true);
+            this.Body.Add(bop);
+        }
+#endif
         MDInfoPanel mdp = new MDInfoPanel(Entity,
             "Mining Information",
             "  Mined",

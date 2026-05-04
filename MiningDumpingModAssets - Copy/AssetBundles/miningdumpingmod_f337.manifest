@@ -1,0 +1,21 @@
+ManifestFileVersion: 0
+UnityVersion: 6000.0.50f1
+CRC: 3738682939
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: ec3b76dcf17c52d69737763f9e9e5589
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5527383dc91eba37123fc67ad6efaa19
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: cf377a9aff21be5beaf92a85cdd57905
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/MiningDumpingMod/Building256.png
+Dependencies: []

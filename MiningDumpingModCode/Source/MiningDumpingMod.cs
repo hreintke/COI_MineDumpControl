@@ -8,12 +8,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using Mafi.Core.Buildings.Forestry;
 
 
 namespace MiningDumpingMod
 {
     public sealed class CustomEntityMod : IMod
     {
+        public static bool ATD_Available = false;
         public CustomEntityMod(ModManifest modManifest) 
         {
             manifest = modManifest;
@@ -42,7 +45,16 @@ namespace MiningDumpingMod
 
         public void Initialize(DependencyResolver resolver, bool gameWasLoaded)
         {
-            LogWrite.Info($"Initializing v = {Version}");
+            var mods = resolver.ResolveAll<IMod>();
+            foreach (var mod in mods.Implementations)
+            {
+                if (mod.Manifest.Id == "AutoTerrainDesignations")
+                {
+                    ATD_Available = true;
+                    break;
+                }
+            }
+            LogWrite.Info($"Initializing v = {Version}. ATD_Available {ATD_Available}");
         }
 
         public void RegisterDependencies(DependencyResolverBuilder depBuilder, ProtosDb protosDb, bool gameWasLoaded)
