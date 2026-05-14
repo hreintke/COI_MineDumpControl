@@ -40,7 +40,7 @@ namespace MiningDumpingMod
                 );
 
 
-            EntityCostsTpl ecTpl = new EntityCostsTpl.Builder().CP3(100).Glass(20).MaintenanceT3(20).Workers(20);
+            EntityCostsTpl ecTpl = new EntityCostsTpl.Builder().CP3(100).Glass(20).MaintenanceT2(20).Workers(20);
 //            EntityCostsTpl ecTpl = new EntityCostsTpl.Builder().CP(1).MaintenanceT1(2);
             EntityCosts ec = ecTpl.MapToEntityCosts(registrator);
 
