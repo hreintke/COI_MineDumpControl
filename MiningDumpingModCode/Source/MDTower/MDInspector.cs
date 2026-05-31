@@ -3,6 +3,7 @@ using Mafi.Base;
 using Mafi.Collections;
 using Mafi.Collections.ReadonlyCollections;
 using Mafi.Core;
+using Mafi.Core.Buildings.Forestry;
 using Mafi.Core.Buildings.Mine;
 using Mafi.Core.Buildings.OreSorting;
 using Mafi.Core.Buildings.Towers;
@@ -41,7 +42,9 @@ public class MDInspector : BaseInspector<MDTower>
 {
     private readonly TowerAreasRenderer m_towerAreasRenderer;
     private readonly IActivator m_towerAreasAndDesignatorsActivator;
-    private readonly PolygonAreaSelectionController m_areaSelectionTool;
+    private readonly MultiAreaEditController m_multiEditController;
+    private readonly MDManager mdManager;
+    private readonly ForestryTowersManager m_forestryTowersManager;
     public bool AreaEditInProgress;
     private Option<MDTower> m_entityUnderEdit;
 
@@ -49,16 +52,20 @@ public class MDInspector : BaseInspector<MDTower>
       UiContext context,
       TowerAreasRenderer towerAreasRenderer,
       AssignedBuildingsHighlighter highlighter,
-      BuildingsAssigner buildingsAssigner,
-      NewInstanceOf<PolygonAreaSelectionController> areaSelectionTool) : base(context)
+      MultiAreaEditController multiEditController,
+      MDManager md,
+      ForestryTowersManager forestryTowersManager
+    ) : base(context)
     {
         this.m_towerAreasRenderer = towerAreasRenderer;
         this.m_towerAreasAndDesignatorsActivator = towerAreasRenderer.CreateCombinedActivatorWithTerrainDesignatorsAndGrid();
-        this.m_areaSelectionTool = areaSelectionTool.Instance;
+        this.m_multiEditController = multiEditController;
+        this.mdManager = md;
+        m_forestryTowersManager = forestryTowersManager;
 
         Row selectRow = new Row(1.pt());
         selectRow.Add(
-            (UiComponent)new ButtonIconText(Button.Primary, "Assets/Unity/UserInterface/Toolbox/SelectArea.svg", (LocStrFormatted)Tr.ManagedArea__EditAction)
+            (UiComponent)new ButtonIconText(Button.Primary, "Assets/Unity/UserInterface/Toolbox/SelectArea.svg", (LocStrFormatted)Tr.ManagedAreas__EditAction)
             .OnClick<ButtonIconText>(new Action(this.activateAreaEditing)), (UiComponent)new ButtonIcon(Button.General, "Assets/Unity/UserInterface/General/Search.svg")
             .OnClick<ButtonIcon>((Action)(() => context.CameraController.PanTo(Entity.Area.BoundingBoxCenter.CenterTile2f)))
             .Tooltip<ButtonIcon>(new LocStrFormatted?((LocStrFormatted)Tr.FocusManagedAreaTooltip)));
@@ -199,7 +206,9 @@ public class MDInspector : BaseInspector<MDTower>
     {
         this.m_entityUnderEdit = (Option<MDTower>)this.Entity;
         this.m_towerAreasRenderer.MarkAreaUnderEdit((Option<IAreaManagingTower>)this.Entity);
-        this.m_areaSelectionTool.BeginEdit(this.Entity.Area, 400.ToFix32(), new Action(this.deactivateEditing), new Action(this.reopen), new Action<PolygonTerrainArea2i>(this.onAreaChanged));
+        //        this.m_areaSelectionTool.BeginEdit(this.Entity.Area, 400.ToFix32(), new Action(this.deactivateEditing), new Action(this.reopen), new Action<PolygonTerrainArea2i>(this.onAreaChanged));
+        this.m_multiEditController.ActivateForMDTower((IAreaManagingTower)this.Entity, this.mdManager, this.m_towerAreasRenderer, this.Context.InputScheduler, new Action(this.reopen));
+
     }
 }
 

@@ -27,6 +27,7 @@ using Mafi.Core.Vehicles.Jobs;
 using Mafi.Core.Terrain.Props;
 using UnityEngine;
 using Mafi.Core.Simulation;
+using Mafi.Core.Terrain.Trees;
 
 namespace MiningDumpingMod
 {
@@ -38,7 +39,8 @@ namespace MiningDumpingMod
             TerrainDesignationsManager designationManager,
             MDManager mdManager,
             IEntityMaintenanceProvidersFactory maintenanceProvidersFactory,
-            Calendar cld) : base(id, proto, transform, context)
+            Calendar cld,
+            TreesManager tm) : base(id, proto, transform, context)
 
         {
             _proto = proto;
@@ -52,6 +54,7 @@ namespace MiningDumpingMod
             _maintenance = maintenanceProvidersFactory.CreateFor(this);
             calendar = cld;
             cld.NewMonth.Add<MDTower>(this, onNewMonth);
+            treesManager = tm;
 
             editMinableArea(minableArea);
          }
@@ -88,6 +91,7 @@ namespace MiningDumpingMod
         private RectangleTerrainArea2i minableArea_old;
         private readonly MDManager _mdManager;
         private Calendar calendar;
+        private TreesManager treesManager;
         public IEntityMaintenanceProvider _maintenance { get; private set; }
 
 
@@ -321,6 +325,7 @@ namespace MiningDumpingMod
             recreateManagedDestinationsLysts();
             if (_designationManager.TerrainPropsManager.ContainsPropInDesignation(designation))
             {
+                LogWrite.Info("Designation Cleared");
                 for (int ix = 0; ix < 25; ix++)
                 {
                     clearProps(designation.OriginTileCoord + new RelTile2i().Rel4Index(ix));
@@ -542,6 +547,11 @@ namespace MiningDumpingMod
 
         public PartialQuantity mineTile(Tile2i txi)
         {
+            if (treesManager.TryGetStump(new TreeId((txi.AsSlim)), out TreeStumpData tsd))
+            {
+                treesManager.RemoveStumpAtTile(txi);
+            }
+
 //            terrainRectSelection.SetArea(mineDesignations[mineDesignationIndex].Area, UnityEngine.Color.yellow);
             HeightTilesF requestedHeight = mineDesignations[mineDesignationIndex].GetTargetHeightAt(txi);
             Tile2iAndIndex txia = txi.ExtendIndex(Context.TerrainManager);
@@ -789,6 +799,16 @@ namespace MiningDumpingMod
             {
                 calendar = c.Value;
                 c.Value.NewMonth.AddNonSaveable<MDTower>(this, onNewMonth);
+            }
+
+            Option<TreesManager> t = resolver.GetResolvedInstance<TreesManager>(); 
+            if (!t.HasValue)
+            {
+                LogWrite.Info("No TreesManager resolved");
+            }
+            else
+            {
+                treesManager = t.Value;
             }
         }
 
